@@ -39,15 +39,17 @@ public class ListItemAdapter extends BaseAdapter {
         }
 
         TextView deviceText = convertView.findViewById(R.id.device);
+        TextView addressText = convertView.findViewById(R.id.address);
         TextView rssiText = convertView.findViewById(R.id.rssi);
 
         deviceText.setText(listItem.getDevice());
+        addressText.setText(listItem.getAddress());
         rssiText.setText(listItem.getRssi());
 
         return convertView;
     }
 
-    public void addItem(String device, String rssi){
-        items.add(new ListItem(device,rssi));
+    public void addItem(String device, String address, String rssi){
+        items.add(new ListItem(device,address,rssi));
     }
 }

@@ -71,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    if(Objects.equals(device.getName(), "park01")){
+                    if(Objects.equals(device.getAddress(), getString(R.string.BeaconAddress01))){
                         adapter.items.clear();
-                        adapter.addItem(device.getName(), Integer.toString(rssi));
+                        adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi));
                         adapter.notifyDataSetChanged();
                     }
                 }
