@@ -20,17 +20,12 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
 
-    Button scanBtn;
-    Button stopBtn;
     ListView listView;
     ListItemAdapter adapter;
-
-    private BluetoothLeScanner mBLEScanner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,35 +48,39 @@ public class MainActivity extends AppCompatActivity {
 
     private void bleCheck(BluetoothAdapter bluetoothAdapter) {
         if (bluetoothAdapter == null) {
-            //블루투스를 지원하지 않으면 장치를 끈다
-            Toast.makeText(this, "블루투스를 지원하지 않는 장치입니다.", Toast.LENGTH_SHORT).show();
+            // If device don't support bluetooth, just turn off.
+            Toast.makeText(this, "Bluetooth is not supported", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            //연결 안되었을 때
             if (!bluetoothAdapter.isEnabled()) {
-                //블루투스 연결
+                // if bluetooth is not turned on, prompt to turn it on.
                 Intent i = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivity(i);
             }
         }
     }
 
+    // Scan bluetooth devices
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 public void run() {
                     if(
+                            // filters only desired BLE devices (beacons)
                             getString(R.string.BeaconAddress01).equals(device.getAddress()) ||
                             getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
                             getString(R.string.BeaconAddress03).equals(device.getAddress())
                     ){
+                        // updates information of each beacons on ListView
                         int index = adapter.address.indexOf(device.getAddress());
                         if(index == -1){
                             adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi));
                         }
                         else{
-                            adapter.items.set(index, new ListItem(device.getName(),device.getAddress(),Integer.toString(rssi)));
+                            adapter.device.set(index, device.getName());
+                            adapter.address.set(index, device.getAddress());
+                            adapter.rssi.set(index, Integer.toString(rssi));
                         }
                         adapter.notifyDataSetChanged();
                     }

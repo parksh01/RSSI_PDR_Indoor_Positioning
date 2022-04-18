@@ -10,18 +10,19 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class ListItemAdapter extends BaseAdapter {
-    ArrayList<ListItem> items = new ArrayList<ListItem>();
-    ArrayList<String> address = new ArrayList<String>();
+    ArrayList<String> device = new ArrayList<String>();
+    ArrayList<String> address = new ArrayList<String>(); // each devices are distinguished by its MAC address.
+    ArrayList<String> rssi = new ArrayList<String>();
     Context context;
 
     @Override
     public int getCount() {
-        return items.size();
+        return address.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return items.get(i);
+        return address.get(i);
     }
 
     @Override
@@ -32,7 +33,6 @@ public class ListItemAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         context = parent.getContext();
-        ListItem listItem = items.get(position);
 
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -43,15 +43,16 @@ public class ListItemAdapter extends BaseAdapter {
         TextView addressText = convertView.findViewById(R.id.address);
         TextView rssiText = convertView.findViewById(R.id.rssi);
 
-        deviceText.setText(listItem.getDevice());
-        addressText.setText(listItem.getAddress());
-        rssiText.setText(listItem.getRssi());
+        deviceText.setText(this.device.get(position));
+        addressText.setText(this.address.get(position));
+        rssiText.setText(this.rssi.get(position));
 
         return convertView;
     }
 
     public void addItem(String device, String address, String rssi){
-        items.add(new ListItem(device,address,rssi));
+        this.device.add(device);
         this.address.add(address);
+        this.rssi.add(rssi);
     }
 }
