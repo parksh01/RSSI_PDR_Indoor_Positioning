@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class ListItemAdapter extends BaseAdapter {
     ArrayList<ListItem> items = new ArrayList<ListItem>();
+    ArrayList<String> address = new ArrayList<String>();
     Context context;
 
     @Override
@@ -51,5 +52,6 @@ public class ListItemAdapter extends BaseAdapter {
 
     public void addItem(String device, String address, String rssi){
         items.add(new ListItem(device,address,rssi));
+        this.address.add(address);
     }
 }
