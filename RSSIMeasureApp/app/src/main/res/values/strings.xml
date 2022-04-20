@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">RSSI Measure App</string>
     <string name="BeaconAddress01">A8:1B:6A:AE:5F:F6</string>
-    <string name="BeaconAddress02">A8:1B:6A:AE:4C:6B</string>
+    <string name="BeaconAddress02">A8:1B:6A:AE:5F:F6</string>
     <string name="BeaconAddress03">A8:1B:6A:AE:5F:F6</string>
 </resources>
