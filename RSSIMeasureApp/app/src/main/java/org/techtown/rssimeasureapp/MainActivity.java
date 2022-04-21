@@ -78,9 +78,7 @@ public class MainActivity extends AppCompatActivity {
                             adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi));
                         }
                         else{
-                            adapter.device.set(index, device.getName());
-                            adapter.address.set(index, device.getAddress());
-                            adapter.rssi.set(index, Integer.toString(rssi));
+                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), index);
                         }
                         adapter.notifyDataSetChanged();
                     }
