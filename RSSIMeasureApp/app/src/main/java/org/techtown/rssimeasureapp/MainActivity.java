@@ -11,11 +11,16 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -36,9 +41,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Required Permission : Location, File Write
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 MY_PERMISSIONS_REQUEST_LOCATION);
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                MODE_PRIVATE);
 
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
@@ -105,5 +114,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLogClicked(View view) {
+        Toast.makeText(this, "Log Generated", Toast.LENGTH_SHORT).show();
+        for(int i = 0; i < adapter.getCount(); i++){
+            String fileTitle = adapter.address.get(i).replace(":", "") + ".csv";
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileTitle);
+            try {
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter writer = new FileWriter(file, false);
+                String str = "rssi,rssiKarman" + '\n';
+                for(int j = 0; j < adapter.rssi.get(i).size(); j++){
+                    str += adapter.rssi.get(i).get(j);
+                    str += ',';
+                    str += adapter.rssiKalman.get(i).get(j);
+                    str += '\n';
+                }
+                writer.write(str);
+                writer.close();
+            } catch (IOException e) {
+
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@ public class KalmanFilter {
     public KalmanFilter(){
         this.errorCovariance = 0;
         this.initialized = false;
-        this.processNoise = 10;
+        this.processNoise = 5;
         this.measurementNoise = 10;
         this.predictedRSSI = 0;
     }
