@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
 
     ListView listView;
     ListItemAdapter adapter;
+
+    ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,10 +78,12 @@ public class MainActivity extends AppCompatActivity {
                         // updates information of each beacons on ListView
                         int index = adapter.address.indexOf(device.getAddress());
                         if(index == -1){
-                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi));
+                            kf.add(new KalmanFilter());
+                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi));
                         }
                         else{
-                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), index);
+                            int filteredRSSI = kf.get(index).filtering(rssi);
+                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI),index);
                         }
                         adapter.notifyDataSetChanged();
                     }
