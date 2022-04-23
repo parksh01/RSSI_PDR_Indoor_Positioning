@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     ListItemAdapter adapter;
 
+    // uses Kalman filter to correct errors on RSSI values. (for RSSI of each beacons)
     ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
 
     @Override
@@ -103,5 +104,6 @@ public class MainActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
-
+    public void onLogClicked(View view) {
+    }
 }

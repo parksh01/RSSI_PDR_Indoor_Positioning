@@ -43,6 +43,15 @@
             android:onClick="onStopClicked"
             android:text="Stop"
             android:textSize="24dp" />
+
+        <Button
+            android:id="@+id/button_log"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="28dp"
+            android:onClick="onLogClicked"
+            android:text="Log"
+            android:textSize="24dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

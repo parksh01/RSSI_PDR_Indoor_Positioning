@@ -12,8 +12,8 @@ import java.util.ArrayList;
 public class ListItemAdapter extends BaseAdapter {
     ArrayList<String> device = new ArrayList<String>();
     ArrayList<String> address = new ArrayList<String>(); // each devices are distinguished by its MAC address.
-    ArrayList<String> rssi = new ArrayList<String>();
-    ArrayList<String> rssiKalman = new ArrayList<String>();
+    ArrayList<ArrayList<String>> rssi = new ArrayList<ArrayList<String>>();
+    ArrayList<ArrayList<String>> rssiKalman = new ArrayList<ArrayList<String>>();
     ArrayList<String> distance = new ArrayList<String>();
     Context context;
 
@@ -47,7 +47,7 @@ public class ListItemAdapter extends BaseAdapter {
 
         deviceText.setText(this.device.get(position));
         addressText.setText(this.address.get(position));
-        rssiText.setText(this.rssi.get(position) + " / filtered : " + this.rssiKalman.get(position));
+        rssiText.setText(this.rssi.get(position).get(this.rssi.get(position).size() - 1) + " / filtered : " + this.rssiKalman.get(position).get(this.rssiKalman.get(position).size() - 1));
 
         return convertView;
     }
@@ -55,15 +55,19 @@ public class ListItemAdapter extends BaseAdapter {
     public void addItem(String device, String address, String rssi, String rssiKalman){
         this.device.add(device);
         this.address.add(address);
-        this.rssi.add(rssi);
-        this.rssiKalman.add(rssiKalman);
+        ArrayList<String> temp = new ArrayList<String>();
+        temp.add(rssi);
+        this.rssi.add(temp);
+        temp = new ArrayList<String>();
+        temp.add(rssiKalman);
+        this.rssiKalman.add(temp);
         this.distance.add("" + Triangulation.RssiToDistance(Integer.parseInt(rssi)));
     }
     public void setItem(String device, String address, String rssi, String rssiKalman, int index){
         this.device.set(index, device);
         this.address.set(index, address);
-        this.rssi.set(index, rssi);
-        this.rssiKalman.set(index, rssiKalman);
+        this.rssi.get(index).add(rssi);
+        this.rssiKalman.get(index).add(rssiKalman);
         this.distance.set(index, "" + Triangulation.RssiToDistance(Integer.parseInt(rssi)));
     }
 }
