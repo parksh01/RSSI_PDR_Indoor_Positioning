@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -41,6 +42,10 @@ public class MainActivity extends AppCompatActivity {
     // uses Kalman filter to correct errors on RSSI values. (for RSSI of each beacons)
     ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
 
+    // Kalman filter constants.
+    EditText Kalman_A;
+    EditText Kalman_n;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.BTlist);
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
+        Kalman_A = findViewById(R.id.Kalman_A);
+        Kalman_n = findViewById(R.id.Kalman_n);
     }
 
     private void bleCheck(BluetoothAdapter bluetoothAdapter) {
@@ -89,17 +96,24 @@ public class MainActivity extends AppCompatActivity {
                             getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
                             getString(R.string.BeaconAddress03).equals(device.getAddress())
                     ){
-                        // updates information of each beacons on ListView
+                        int Kalman_A_value = 0;
+                        int Kalman_n_value = 0;
+                        if ( Kalman_A.getText().toString().length() != 0 && Kalman_n.getText().toString().length() != 0 ) {
+                            Kalman_A_value = Integer.parseInt(Kalman_A.getText().toString());
+                            Kalman_n_value = Integer.parseInt(Kalman_n.getText().toString());
+                        }
+
+                        // Update beacon list.
                         int index = adapter.address.indexOf(device.getAddress());
                         // if there is new beacon discovered, add it to the device list.
                         if(index == -1){
                             kf.add(new KalmanFilter());
-                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi));
+                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, Kalman_A_value, Kalman_n_value)));
                         }
                         // if there is a beacon already in the device list, update it.
                         else{
                             int filteredRSSI = kf.get(index).filtering(rssi);
-                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI),index);
+                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, Kalman_A_value, Kalman_n_value)),index);
                         }
                         adapter.notifyDataSetChanged();
                     }
@@ -134,37 +148,50 @@ public class MainActivity extends AppCompatActivity {
                 double stdev_rssi = 0;
                 double avg_rssi = 0;
                 int sum_rssi = 0;
+
                 double stdev_rssiKalman = 0;
                 double avg_rssiKalman = 0;
                 int sum_rssiKalman = 0;
 
+                double stdev_distance = 0;
+                double avg_distance = 0;
+                double sum_distance = 0;
+
                 // get raw data
-                String str = "rssi,rssiKarman" + '\n';
+                String str = "rssi,rssiKarman,distance" + '\n';
                 for(int j = 0; j < adapter.rssi.get(i).size(); j++){
                     str += adapter.rssi.get(i).get(j);
                     sum_rssi += Integer.parseInt(adapter.rssi.get(i).get(j));
                     str += ',';
+
                     str += adapter.rssiKalman.get(i).get(j);
                     sum_rssiKalman += Integer.parseInt(adapter.rssiKalman.get(i).get(j));
+                    str += ',';
+
+                    str += adapter.distance.get(i).get(j);
+                    sum_distance += Double.parseDouble(adapter.distance.get(i).get(j));
                     str += '\n';
                 }
 
                 // get average
-                str += "avg(rssi),avg(rssiKalman)\n";
+                str += "avg(rssi),avg(rssiKalman),avg(distance)\n";
                 avg_rssi = (double)sum_rssi / (double)adapter.rssi.get(i).size();
                 avg_rssiKalman = (double)sum_rssiKalman / (double)adapter.rssiKalman.get(i).size();
-                str += "" + avg_rssi + ',' + avg_rssiKalman + '\n';
+                avg_distance = sum_distance / (double)adapter.distance.get(i).size();
+                str += "" + avg_rssi + ',' + avg_rssiKalman + ',' + avg_distance + '\n';
 
                 // get standard deviation
                 for(int j = 0; j < adapter.rssi.get(i).size(); j++){
                     stdev_rssi += Math.pow(avg_rssi - (double)Integer.parseInt(adapter.rssi.get(i).get(j)), 2);
                     stdev_rssiKalman += Math.pow(avg_rssiKalman - (double)Integer.parseInt(adapter.rssiKalman.get(i).get(j)), 2);
+                    stdev_distance += Math.pow(avg_distance - Double.parseDouble(adapter.distance.get(i).get(j)), 2);
                 }
                 stdev_rssi = Math.sqrt(stdev_rssi / (double)adapter.rssi.get(i).size());
                 stdev_rssiKalman = Math.sqrt(stdev_rssiKalman / (double)adapter.rssiKalman.get(i).size());
+                stdev_distance = Math.sqrt(stdev_distance / (double)adapter.distance.get(i).size());
 
-                str += "stdev(rssi),stdev(rssiKalman)\n";
-                str += "" + stdev_rssi + "," + stdev_rssiKalman;
+                str += "stdev(rssi),stdev(rssiKalman),stdev(distance)\n";
+                str += "" + stdev_rssi + "," + stdev_rssiKalman + "," + stdev_distance;
 
                 // close the file
                 writer.write(str);

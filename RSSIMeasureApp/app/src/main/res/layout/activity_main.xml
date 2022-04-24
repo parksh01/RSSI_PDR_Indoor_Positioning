@@ -15,6 +15,47 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
+    <LinearLayout
+        android:id="@+id/KalmanFilterVariables"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="기준거리 RSSI" />
+
+        <EditText
+            android:id="@+id/Kalman_A"
+            android:layout_width="96dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="-60" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="경로손실지수" />
+
+        <EditText
+            android:id="@+id/Kalman_n"
+            android:layout_width="96dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="4" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/linearLayout"

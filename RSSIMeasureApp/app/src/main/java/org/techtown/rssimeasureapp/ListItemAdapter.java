@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class ListItemAdapter extends BaseAdapter {
     ArrayList<String> address = new ArrayList<String>(); // each devices are distinguished by its MAC address.
     ArrayList<ArrayList<String>> rssi = new ArrayList<ArrayList<String>>();
     ArrayList<ArrayList<String>> rssiKalman = new ArrayList<ArrayList<String>>();
-    ArrayList<String> distance = new ArrayList<String>();
+    ArrayList<ArrayList<String>> distance = new ArrayList<ArrayList<String>>();
     Context context;
 
     @Override
@@ -47,12 +48,15 @@ public class ListItemAdapter extends BaseAdapter {
 
         deviceText.setText(this.device.get(position));
         addressText.setText(this.address.get(position));
-        rssiText.setText(this.rssi.get(position).get(this.rssi.get(position).size() - 1) + " / filtered : " + this.rssiKalman.get(position).get(this.rssiKalman.get(position).size() - 1));
-
+        rssiText.setText(this.rssi.get(position).get(this.rssi.get(position).size() - 1) +
+                " / filtered : " +
+                this.rssiKalman.get(position).get(this.rssiKalman.get(position).size() - 1) +
+                " / Distance : " +
+                this.distance.get(position).get(this.distance.get(position).size() - 1));
         return convertView;
     }
 
-    public void addItem(String device, String address, String rssi, String rssiKalman){
+    public void addItem(String device, String address, String rssi, String rssiKalman, String distance){
         this.device.add(device);
         this.address.add(address);
         ArrayList<String> temp = new ArrayList<String>();
@@ -61,14 +65,16 @@ public class ListItemAdapter extends BaseAdapter {
         temp = new ArrayList<String>();
         temp.add(rssiKalman);
         this.rssiKalman.add(temp);
-        this.distance.add("" + Triangulation.RssiToDistance(Integer.parseInt(rssi)));
+        temp = new ArrayList<String>();
+        temp.add(distance);
+        this.distance.add(temp);
     }
-    public void setItem(String device, String address, String rssi, String rssiKalman, int index){
+    public void setItem(String device, String address, String rssi, String rssiKalman, String distance, int index){
         this.device.set(index, device);
         this.address.set(index, address);
         this.rssi.get(index).add(rssi);
         this.rssiKalman.get(index).add(rssiKalman);
-        this.distance.set(index, "" + Triangulation.RssiToDistance(Integer.parseInt(rssi)));
+        this.distance.get(index).add(distance);
     }
 
     public void clear() {
