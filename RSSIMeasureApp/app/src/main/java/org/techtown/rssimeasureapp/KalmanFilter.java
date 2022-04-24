@@ -1,5 +1,7 @@
 package org.techtown.rssimeasureapp;
 
+import static android.provider.Settings.System.getString;
+
 public class KalmanFilter {
     public boolean initialized;
 
@@ -15,10 +17,10 @@ public class KalmanFilter {
     public double kalmanGain; // K_t
 
     public KalmanFilter(){
-        this.errorCovariance = 0;
+        this.errorCovariance = 0; // it don't has any vector. so let it 0.
         this.initialized = false;
-        this.processNoise = 5;
-        this.measurementNoise = 10;
+        this.processNoise = 1;
+        this.measurementNoise = 4;
         this.predictedRSSI = 0;
     }
 

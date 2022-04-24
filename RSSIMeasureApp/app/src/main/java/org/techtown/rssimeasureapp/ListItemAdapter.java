@@ -70,4 +70,12 @@ public class ListItemAdapter extends BaseAdapter {
         this.rssiKalman.get(index).add(rssiKalman);
         this.distance.set(index, "" + Triangulation.RssiToDistance(Integer.parseInt(rssi)));
     }
+
+    public void clear() {
+        device.clear();
+        address.clear();
+        rssi.clear();
+        rssiKalman.clear();
+        distance.clear();
+    }
 }

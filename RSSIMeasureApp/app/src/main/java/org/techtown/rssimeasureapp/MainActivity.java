@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
 
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
-
         bleCheck(bluetoothAdapter);
 
         listView = findViewById(R.id.BTlist);
@@ -87,10 +86,12 @@ public class MainActivity extends AppCompatActivity {
                     ){
                         // updates information of each beacons on ListView
                         int index = adapter.address.indexOf(device.getAddress());
+                        // if there is new beacon discovered, add it to the device list.
                         if(index == -1){
                             kf.add(new KalmanFilter());
                             adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi));
                         }
+                        // if there is a beacon already in the device list, update it.
                         else{
                             int filteredRSSI = kf.get(index).filtering(rssi);
                             adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI),index);
@@ -114,8 +115,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLogClicked(View view) {
-        Toast.makeText(this, "Log Generated", Toast.LENGTH_SHORT).show();
+        // Generate Log File
         for(int i = 0; i < adapter.getCount(); i++){
+            // File name is MAC address of device
             String fileTitle = adapter.address.get(i).replace(":", "") + ".csv";
             File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileTitle);
             try {
@@ -123,18 +125,54 @@ public class MainActivity extends AppCompatActivity {
                     file.createNewFile();
                 }
                 FileWriter writer = new FileWriter(file, false);
+                double stdev_rssi = 0;
+                double avg_rssi = 0;
+                int sum_rssi = 0;
+                double stdev_rssiKalman = 0;
+                double avg_rssiKalman = 0;
+                int sum_rssiKalman = 0;
+
+                // get raw data
                 String str = "rssi,rssiKarman" + '\n';
                 for(int j = 0; j < adapter.rssi.get(i).size(); j++){
                     str += adapter.rssi.get(i).get(j);
+                    sum_rssi += Integer.parseInt(adapter.rssi.get(i).get(j));
                     str += ',';
                     str += adapter.rssiKalman.get(i).get(j);
+                    sum_rssiKalman += Integer.parseInt(adapter.rssiKalman.get(i).get(j));
                     str += '\n';
                 }
+
+                // get average
+                str += "avg(rssi),avg(rssiKalman)\n";
+                avg_rssi = (double)sum_rssi / (double)adapter.rssi.get(i).size();
+                avg_rssiKalman = (double)sum_rssiKalman / (double)adapter.rssiKalman.get(i).size();
+                str += "" + avg_rssi + ',' + avg_rssiKalman + '\n';
+
+                // get standard deviation
+                for(int j = 0; j < adapter.rssi.get(i).size(); j++){
+                    stdev_rssi += Math.pow(avg_rssi - (double)Integer.parseInt(adapter.rssi.get(i).get(j)), 2);
+                    stdev_rssiKalman += Math.pow(avg_rssiKalman - (double)Integer.parseInt(adapter.rssiKalman.get(i).get(j)), 2);
+                }
+                stdev_rssi = Math.sqrt(stdev_rssi / (double)adapter.rssi.get(i).size());
+                stdev_rssiKalman = Math.sqrt(stdev_rssiKalman / (double)adapter.rssiKalman.get(i).size());
+
+                str += "stdev(rssi),stdev(rssiKalman)\n";
+                str += "" + stdev_rssi + "," + stdev_rssiKalman;
+
+                // close the file
                 writer.write(str);
                 writer.close();
             } catch (IOException e) {
 
             }
         }
+        Toast.makeText(this, "Log Generated", Toast.LENGTH_SHORT).show();
+    }
+
+    public void onClearClicked(View view) {
+        kf.clear();
+        adapter.clear();
+        adapter.notifyDataSetChanged();
     }
 }

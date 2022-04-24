@@ -33,7 +33,7 @@
             android:layout_marginBottom="28dp"
             android:onClick="onScanClicked"
             android:text="Scan"
-            android:textSize="24dp" />
+            android:textSize="16dp" />
 
         <Button
             android:id="@+id/button_stop"
@@ -42,7 +42,17 @@
             android:layout_marginBottom="28dp"
             android:onClick="onStopClicked"
             android:text="Stop"
-            android:textSize="24dp" />
+            android:textSize="16dp" />
+
+        <Button
+            android:id="@+id/button_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginBottom="28dp"
+            android:text="Clear"
+            android:textSize="16dp"
+            android:onClick="onClearClicked" />
 
         <Button
             android:id="@+id/button_log"
@@ -51,7 +61,7 @@
             android:layout_marginBottom="28dp"
             android:onClick="onLogClicked"
             android:text="Log"
-            android:textSize="24dp" />
+            android:textSize="16dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
