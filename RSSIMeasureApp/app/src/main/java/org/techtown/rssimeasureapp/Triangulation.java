@@ -36,9 +36,12 @@ public class Triangulation {
         CalculateCoordinate(r1, r2);
     }
 
+    public static double RssiToDistance(int rssi, double A, double n){
+        return Math.pow(10, ((double)rssi-A)/((-10)*n));
+    }
     public static double RssiToDistance(int rssi){
-        double a = -60;
-        double n = 2.66;
-        return Math.pow(10, ((double)rssi-a)/((-10)*n));
+        double n = 1.7;
+        double A = -61.564;
+        return Math.pow(10, ((double)rssi-A)/((-10)*n));
     }
 }
