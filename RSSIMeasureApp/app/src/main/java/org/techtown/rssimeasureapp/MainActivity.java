@@ -8,15 +8,12 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -28,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,9 +62,23 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.BTlist);
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
+
+        String Kalman_A_value = PrefManager.getString(this, "KF_A", "-70");
         Kalman_A = findViewById(R.id.Kalman_A);
+        Kalman_A.setText(Kalman_A_value);
+
+        String Kalman_n_value = PrefManager.getString(this, "KF_n", "2");
         Kalman_n = findViewById(R.id.Kalman_n);
+        Kalman_n.setText(Kalman_n_value);
     }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        PrefManager.setString(this, "KF_A", Kalman_A.getText().toString());
+        PrefManager.setString(this, "KF_n", Kalman_n.getText().toString());
+    }
+
 
     private void bleCheck(BluetoothAdapter bluetoothAdapter) {
         if (bluetoothAdapter == null) {
