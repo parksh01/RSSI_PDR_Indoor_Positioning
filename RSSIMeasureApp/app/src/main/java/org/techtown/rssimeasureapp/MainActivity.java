@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -55,6 +56,16 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                 MODE_PRIVATE);
 
+        // Android 12 Requires additional permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_ADVERTISE,
+                    Manifest.permission.BLUETOOTH_CONNECT}, 1);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH}, 1);
+        }
+
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         bleCheck(bluetoothAdapter);
@@ -73,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
         PrefManager.setString(this, "KF_A", Kalman_A.getText().toString());
         PrefManager.setString(this, "KF_n", Kalman_n.getText().toString());
@@ -89,6 +100,10 @@ public class MainActivity extends AppCompatActivity {
             if (!bluetoothAdapter.isEnabled()) {
                 // if bluetooth is not turned on, prompt to turn it on.
                 Intent i = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 startActivity(i);
             }
         }
@@ -100,15 +115,15 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    if(
-                            // filters only desired BLE devices (beacons)
+                    if (
+                        // filters only desired BLE devices (beacons)
                             getString(R.string.BeaconAddress01).equals(device.getAddress()) ||
-                            getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
-                            getString(R.string.BeaconAddress03).equals(device.getAddress())
-                    ){
+                                    getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
+                                    getString(R.string.BeaconAddress03).equals(device.getAddress())
+                    ) {
                         int Kalman_A_value = 0;
                         int Kalman_n_value = 0;
-                        if ( Kalman_A.getText().toString().length() != 0 && Kalman_n.getText().toString().length() != 0 ) {
+                        if (Kalman_A.getText().toString().length() != 0 && Kalman_n.getText().toString().length() != 0) {
                             Kalman_A_value = Integer.parseInt(Kalman_A.getText().toString());
                             Kalman_n_value = Integer.parseInt(Kalman_n.getText().toString());
                         }
@@ -116,14 +131,18 @@ public class MainActivity extends AppCompatActivity {
                         // Update beacon list.
                         int index = adapter.address.indexOf(device.getAddress());
                         // if there is new beacon discovered, add it to the device list.
-                        if(index == -1){
+                        if (index == -1) {
                             kf.add(new KalmanFilter());
+                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                                Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
                             adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, Kalman_A_value, Kalman_n_value)));
                         }
                         // if there is a beacon already in the device list, update it.
-                        else{
+                        else {
                             int filteredRSSI = kf.get(index).filtering(rssi);
-                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, Kalman_A_value, Kalman_n_value)),index);
+                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, Kalman_A_value, Kalman_n_value)), index);
                         }
                         adapter.notifyDataSetChanged();
                     }
@@ -134,11 +153,20 @@ public class MainActivity extends AppCompatActivity {
 
     public void onScanClicked(View view) {
         Toast.makeText(this, "Scan Start", Toast.LENGTH_SHORT).show();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
+
+            return;
+        }
         bluetoothAdapter.startLeScan(leScanCallback);
     }
 
     public void onStopClicked(View view) {
         Toast.makeText(this, "Scan Stop", Toast.LENGTH_SHORT).show();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
+            return;
+        }
         bluetoothAdapter.stopLeScan(leScanCallback);
         adapter.notifyDataSetChanged();
     }
