@@ -39,9 +39,9 @@ public class MainActivity extends AppCompatActivity {
     // uses Kalman filter to correct errors on RSSI values. (for RSSI of each beacons)
     ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
 
-    // Kalman filter constants.
-    EditText Kalman_A;
-    EditText Kalman_n;
+    // RSSI to Distance mapping coefficients.
+    EditText RSSItoDist_A;
+    EditText RSSItoDist_n;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,20 +74,20 @@ public class MainActivity extends AppCompatActivity {
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
 
-        String Kalman_A_value = PrefManager.getString(this, "KF_A", "-70");
-        Kalman_A = findViewById(R.id.Kalman_A);
-        Kalman_A.setText(Kalman_A_value);
+        String RSSItoDist_A_value = PrefManager.getString(this, "RSSItoDist_A", "-70");
+        RSSItoDist_A = findViewById(R.id.Kalman_A);
+        RSSItoDist_A.setText(RSSItoDist_A_value);
 
-        String Kalman_n_value = PrefManager.getString(this, "KF_n", "2");
-        Kalman_n = findViewById(R.id.Kalman_n);
-        Kalman_n.setText(Kalman_n_value);
+        String Kalman_n_value = PrefManager.getString(this, "RSSItoDist_n", "2");
+        RSSItoDist_n = findViewById(R.id.Kalman_n);
+        RSSItoDist_n.setText(Kalman_n_value);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        PrefManager.setString(this, "KF_A", Kalman_A.getText().toString());
-        PrefManager.setString(this, "KF_n", Kalman_n.getText().toString());
+        PrefManager.setString(this, "RSSItoDist_A", RSSItoDist_A.getText().toString());
+        PrefManager.setString(this, "RSSItoDist_n", RSSItoDist_n.getText().toString());
     }
 
 
@@ -121,11 +121,11 @@ public class MainActivity extends AppCompatActivity {
                                     getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
                                     getString(R.string.BeaconAddress03).equals(device.getAddress())
                     ) {
-                        int Kalman_A_value = 0;
-                        int Kalman_n_value = 0;
-                        if (Kalman_A.getText().toString().length() != 0 && Kalman_n.getText().toString().length() != 0) {
-                            Kalman_A_value = Integer.parseInt(Kalman_A.getText().toString());
-                            Kalman_n_value = Integer.parseInt(Kalman_n.getText().toString());
+                        float RSSItoDist_A_value = 0;
+                        float RSSItoDist_n_value = 0;
+                        if (RSSItoDist_A.getText().toString().length() != 0 && RSSItoDist_n.getText().toString().length() != 0) {
+                            RSSItoDist_A_value = Float.parseFloat(RSSItoDist_A.getText().toString());
+                            RSSItoDist_n_value = Float.parseFloat(RSSItoDist_n.getText().toString());
                         }
 
                         // Update beacon list.
@@ -137,12 +137,12 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, Kalman_A_value, Kalman_n_value)));
+                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, RSSItoDist_A_value, RSSItoDist_n_value)));
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
                             int filteredRSSI = kf.get(index).filtering(rssi);
-                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, Kalman_A_value, Kalman_n_value)), index);
+                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), index);
                         }
                         adapter.notifyDataSetChanged();
                     }
