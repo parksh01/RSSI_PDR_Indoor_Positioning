@@ -133,7 +133,21 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         // Update beacon list.
+                        // first, check if the beacon is already discovered. (if not, index is -1)
                         int index = adapter.address.indexOf(device.getAddress());
+
+                        // get beacon number from MAC address
+                        String beaconNumber = "Unknown";
+                        if(getString(R.string.BeaconAddress01).equals(device.getAddress())){
+                            beaconNumber = "Beacon #1";
+                        }
+                        else if(getString(R.string.BeaconAddress02).equals(device.getAddress())){
+                            beaconNumber = "Beacon #2";
+                        }
+                        else if(getString(R.string.BeaconAddress03).equals(device.getAddress())){
+                            beaconNumber = "Beacon #3";
+                        }
+
                         // if there is new beacon discovered, add it to the device list.
                         if (index == -1) {
                             kf.add(new KalmanFilter());
@@ -142,13 +156,13 @@ public class MainActivity extends AppCompatActivity {
                                 return;
                             }
                             tick.add(1);
-                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(tick.size() - 1).toString());
+                            adapter.addItem(beaconNumber, device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(tick.size() - 1).toString());
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
                             int filteredRSSI = kf.get(index).filtering(rssi);
                             tick.set(index, tick.get(index) + 1);
-                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(index).toString(), index);
+                            adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(index).toString(), index);
                         }
                         adapter.notifyDataSetChanged();
                     }
