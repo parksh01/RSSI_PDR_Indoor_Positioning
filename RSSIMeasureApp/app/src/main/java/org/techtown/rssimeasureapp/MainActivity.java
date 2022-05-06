@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -42,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     // RSSI to Distance mapping coefficients.
     EditText RSSItoDist_A;
     EditText RSSItoDist_n;
+
+    // Counting input ticks for each detected devices
+    ArrayList<Integer> tick = new ArrayList<Integer>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,8 +122,9 @@ public class MainActivity extends AppCompatActivity {
                     if (
                         // filters only desired BLE devices (beacons)
                             getString(R.string.BeaconAddress01).equals(device.getAddress()) ||
-                                    getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
-                                    getString(R.string.BeaconAddress03).equals(device.getAddress())
+                            getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
+                            getString(R.string.BeaconAddress03).equals(device.getAddress()) ||
+                            getString(R.string.BeaconAddress04).equals(device.getAddress())
                     ) {
                         float RSSItoDist_A_value = 0;
                         float RSSItoDist_n_value = 0;
@@ -137,12 +142,14 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, RSSItoDist_A_value, RSSItoDist_n_value)));
+                            tick.add(1);
+                            adapter.addItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(rssi), String.format("%.3f", Triangulation.RssiToDistance(rssi, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(tick.size() - 1).toString());
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
                             int filteredRSSI = kf.get(index).filtering(rssi);
-                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), index);
+                            tick.set(index, tick.get(index) + 1);
+                            adapter.setItem(device.getName(), device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(index).toString(), index);
                         }
                         adapter.notifyDataSetChanged();
                     }
@@ -243,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClearClicked(View view) {
         kf.clear();
+        tick.clear();
         adapter.clear();
         adapter.notifyDataSetChanged();
     }

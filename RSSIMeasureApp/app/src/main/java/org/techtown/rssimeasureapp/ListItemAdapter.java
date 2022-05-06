@@ -16,6 +16,7 @@ public class ListItemAdapter extends BaseAdapter {
     ArrayList<ArrayList<String>> rssi = new ArrayList<ArrayList<String>>();
     ArrayList<ArrayList<String>> rssiKalman = new ArrayList<ArrayList<String>>();
     ArrayList<ArrayList<String>> distance = new ArrayList<ArrayList<String>>();
+    ArrayList<String> tick = new ArrayList<String>();
     Context context;
 
     @Override
@@ -49,32 +50,42 @@ public class ListItemAdapter extends BaseAdapter {
         deviceText.setText(this.device.get(position));
         addressText.setText(this.address.get(position));
         rssiText.setText(this.rssi.get(position).get(this.rssi.get(position).size() - 1) +
-                " / filtered : " +
+                " / kf : " +
                 this.rssiKalman.get(position).get(this.rssiKalman.get(position).size() - 1) +
-                " / Distance : " +
-                this.distance.get(position).get(this.distance.get(position).size() - 1));
+                " / d : " +
+                this.distance.get(position).get(this.distance.get(position).size() - 1) +
+                " tick : " +
+                this.tick.get(position));
         return convertView;
     }
 
-    public void addItem(String device, String address, String rssi, String rssiKalman, String distance){
+    public void addItem(String device, String address, String rssi, String rssiKalman, String distance, String tick){
+        ArrayList<String> temp;
+
         this.device.add(device);
         this.address.add(address);
-        ArrayList<String> temp = new ArrayList<String>();
+
+        temp = new ArrayList<String>();
         temp.add(rssi);
         this.rssi.add(temp);
+
         temp = new ArrayList<String>();
         temp.add(rssiKalman);
         this.rssiKalman.add(temp);
+
         temp = new ArrayList<String>();
         temp.add(distance);
         this.distance.add(temp);
+
+        this.tick.add(tick);
     }
-    public void setItem(String device, String address, String rssi, String rssiKalman, String distance, int index){
+    public void setItem(String device, String address, String rssi, String rssiKalman, String distance, String tick, int index){
         this.device.set(index, device);
         this.address.set(index, address);
         this.rssi.get(index).add(rssi);
         this.rssiKalman.get(index).add(rssiKalman);
         this.distance.get(index).add(distance);
+        this.tick.set(index, tick);
     }
 
     public void clear() {
@@ -83,5 +94,6 @@ public class ListItemAdapter extends BaseAdapter {
         rssi.clear();
         rssiKalman.clear();
         distance.clear();
+        tick.clear();
     }
 }
