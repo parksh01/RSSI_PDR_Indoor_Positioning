@@ -17,7 +17,6 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -79,11 +78,11 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         String RSSItoDist_A_value = PrefManager.getString(this, "RSSItoDist_A", "-70");
-        RSSItoDist_A = findViewById(R.id.Kalman_A);
+        RSSItoDist_A = findViewById(R.id.RSSItoDist_A);
         RSSItoDist_A.setText(RSSItoDist_A_value);
 
         String Kalman_n_value = PrefManager.getString(this, "RSSItoDist_n", "2");
-        RSSItoDist_n = findViewById(R.id.Kalman_n);
+        RSSItoDist_n = findViewById(R.id.RSSItoDist_n);
         RSSItoDist_n.setText(Kalman_n_value);
     }
 

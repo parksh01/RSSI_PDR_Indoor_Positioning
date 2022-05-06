@@ -32,7 +32,7 @@
             android:text="기준거리 RSSI" />
 
         <EditText
-            android:id="@+id/Kalman_A"
+            android:id="@+id/RSSItoDist_A"
             android:layout_width="96dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -47,7 +47,7 @@
             android:text="경로손실지수" />
 
         <EditText
-            android:id="@+id/Kalman_n"
+            android:id="@+id/RSSItoDist_n"
             android:layout_width="96dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
