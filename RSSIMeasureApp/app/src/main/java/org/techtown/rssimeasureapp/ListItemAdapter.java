@@ -19,6 +19,8 @@ public class ListItemAdapter extends BaseAdapter {
     ArrayList<String> tick = new ArrayList<String>();
     Context context;
 
+    ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
+
     @Override
     public int getCount() {
         return address.size();
@@ -59,7 +61,7 @@ public class ListItemAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void addItem(String device, String address, String rssi, String rssiKalman, String distance, String tick){
+    public void addItem(String device, String address, String rssi, float RSSItoDist_A_value, float RSSItoDist_n_value){
         ArrayList<String> temp;
 
         this.device.add(device);
@@ -68,24 +70,25 @@ public class ListItemAdapter extends BaseAdapter {
         temp = new ArrayList<String>();
         temp.add(rssi);
         this.rssi.add(temp);
-
-        temp = new ArrayList<String>();
-        temp.add(rssiKalman);
         this.rssiKalman.add(temp);
 
         temp = new ArrayList<String>();
-        temp.add(distance);
+        temp.add(String.format("%.3f", Triangulation.RssiToDistance(Double.parseDouble(rssi), RSSItoDist_A_value, RSSItoDist_n_value)));
         this.distance.add(temp);
 
-        this.tick.add(tick);
+        this.tick.add("1");
+
+        this.kf.add(new KalmanFilter());
     }
-    public void setItem(String device, String address, String rssi, String rssiKalman, String distance, String tick, int index){
+    public void setItem(String device, String address, String rssi, float RSSItoDist_A_value, float RSSItoDist_n_value, int index){
+        double filteredRSSI = kf.get(index).filtering(Integer.parseInt(rssi));
+
         this.device.set(index, device);
         this.address.set(index, address);
         this.rssi.get(index).add(rssi);
-        this.rssiKalman.get(index).add(rssiKalman);
-        this.distance.get(index).add(distance);
-        this.tick.set(index, tick);
+        this.rssiKalman.get(index).add(String.format("%.3f", filteredRSSI));
+        this.distance.get(index).add(String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)));
+        this.tick.set(index, "" + (Integer.parseInt(this.tick.get(index)) + 1));
     }
 
     public void clear() {
@@ -95,5 +98,6 @@ public class ListItemAdapter extends BaseAdapter {
         rssiKalman.clear();
         distance.clear();
         tick.clear();
+        kf.clear();
     }
 }
