@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -40,9 +41,6 @@ public class MainActivity extends AppCompatActivity {
     // RSSI to Distance mapping coefficients.
     EditText RSSItoDist_A;
     EditText RSSItoDist_n;
-
-    // Counting input ticks for each detected devices
-    ArrayList<Integer> tick = new ArrayList<Integer>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 public void run() {
+                    boolean isSorted = true;
                     if (
                         // filters only desired BLE devices (beacons)
                             getString(R.string.BeaconAddress01).equals(device.getAddress()) ||
@@ -155,6 +154,17 @@ public class MainActivity extends AppCompatActivity {
                                 return;
                             }
                             adapter.addItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value, RSSItoDist_n_value);
+                            if(adapter.getCount() >= 2){
+                                for(int i = 0;i < adapter.getCount() - 1;i++){
+                                    if(adapter.device.get(i).compareTo(adapter.device.get(i+1)) > 0){
+                                        isSorted = false;
+                                    }
+                                }
+                            }
+                            if(isSorted == false){
+                                Log.v("isSorted", "false");
+                                adapter.sort();
+                            }
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
@@ -258,7 +268,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClearClicked(View view) {
-        tick.clear();
         adapter.clear();
         adapter.notifyDataSetChanged();
     }
