@@ -24,7 +24,7 @@ public class KalmanFilter {
         this.predictedRSSI = 0;
     }
 
-    public int filtering(int rssi){ // rssi : m_t (current measured RSSI value)
+    public double filtering(int rssi){ // rssi : m_t (current measured RSSI value)
         // Update
         if(!this.initialized){
             this.initialized = true;
@@ -41,6 +41,6 @@ public class KalmanFilter {
 
         // Prediction
         this.predictedRSSI = this.priorRSSI + (this.kalmanGain * ((double)rssi - this.priorRSSI));
-        return (int)this.predictedRSSI;
+        return this.predictedRSSI;
     }
 }

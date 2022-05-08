@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
 
+    // To display measured RSSI values.
     ListView listView;
     ListItemAdapter adapter;
 
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH}, 1);
         }
 
+        // Activate bluetooth
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         bleCheck(bluetoothAdapter);
@@ -88,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        // Store RSSI to distance coefficients for further use.
         super.onPause();
         PrefManager.setString(this, "RSSItoDist_A", RSSItoDist_A.getText().toString());
         PrefManager.setString(this, "RSSItoDist_n", RSSItoDist_n.getText().toString());
@@ -160,9 +163,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
-                            int filteredRSSI = kf.get(index).filtering(rssi);
+                            double filteredRSSI = kf.get(index).filtering(rssi);
                             tick.set(index, tick.get(index) + 1);
-                            adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), Integer.toString(filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(index).toString(), index);
+                            adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), String.format("%.3f", filteredRSSI), String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)), tick.get(index).toString(), index);
                         }
                         adapter.notifyDataSetChanged();
                     }
