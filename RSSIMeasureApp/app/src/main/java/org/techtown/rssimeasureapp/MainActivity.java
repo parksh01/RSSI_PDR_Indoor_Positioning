@@ -39,8 +39,11 @@ public class MainActivity extends AppCompatActivity {
     ListItemAdapter adapter;
 
     // RSSI to Distance mapping coefficients.
-    EditText RSSItoDist_A;
-    EditText RSSItoDist_n;
+    EditText RSSItoDist_A, RSSItoDist_A_back;
+    EditText RSSItoDist_n, RSSItoDist_n_back;
+
+    // Beacon coordinates
+    EditText Beacon01coordinates, Beacon02coordinates, Beacon03coordinates;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,21 +77,44 @@ public class MainActivity extends AppCompatActivity {
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
 
-        String RSSItoDist_A_value = PrefManager.getString(this, "RSSItoDist_A", "-70");
+        // storing form into SharedPreferences.
+        String RSSItoDist_A_value = PrefManager.getString(this, "RSSItoDist_A_front", "-51.216");
         RSSItoDist_A = findViewById(R.id.RSSItoDist_A);
         RSSItoDist_A.setText(RSSItoDist_A_value);
 
-        String Kalman_n_value = PrefManager.getString(this, "RSSItoDist_n", "2");
+        String RSSItoDist_n_value = PrefManager.getString(this, "RSSItoDist_n_front", "2.261");
         RSSItoDist_n = findViewById(R.id.RSSItoDist_n);
-        RSSItoDist_n.setText(Kalman_n_value);
+        RSSItoDist_n.setText(RSSItoDist_n_value);
+
+        String RSSItoDist_A_back_value = PrefManager.getString(this, "RSSItoDist_A_back", "-52.165");
+        RSSItoDist_A_back = findViewById(R.id.RSSItoDist_A_back);
+        RSSItoDist_A_back.setText(RSSItoDist_A_back_value);
+
+        String RSSItoDist_n_back_value = PrefManager.getString(this, "RSSItoDist_n_back", "1.988");
+        RSSItoDist_n_back = findViewById(R.id.RSSItoDist_n_back);
+        RSSItoDist_n_back.setText(RSSItoDist_n_back_value);
+
+        Beacon01coordinates = findViewById(R.id.Beacon1Coordinate);
+        Beacon01coordinates.setText(PrefManager.getString(this, "Beacon01coordinates", "0,0"));
+
+        Beacon02coordinates = findViewById(R.id.Beacon2Coordinate);
+        Beacon02coordinates.setText(PrefManager.getString(this, "Beacon02coordinates", "0,0"));
+
+        Beacon03coordinates = findViewById(R.id.Beacon3Coordinate);
+        Beacon03coordinates.setText(PrefManager.getString(this, "Beacon03coordinates", "0,0"));
     }
 
     @Override
     protected void onPause() {
         // Store RSSI to distance coefficients for further use.
         super.onPause();
-        PrefManager.setString(this, "RSSItoDist_A", RSSItoDist_A.getText().toString());
-        PrefManager.setString(this, "RSSItoDist_n", RSSItoDist_n.getText().toString());
+        PrefManager.setString(this, "RSSItoDist_A_front", RSSItoDist_A.getText().toString());
+        PrefManager.setString(this, "RSSItoDist_n_front", RSSItoDist_n.getText().toString());
+        PrefManager.setString(this, "RSSItoDist_A_back", RSSItoDist_A_back.getText().toString());
+        PrefManager.setString(this, "RSSItoDist_n_back", RSSItoDist_n_back.getText().toString());
+        PrefManager.setString(this, "Beacon01coordinates", Beacon01coordinates.getText().toString());
+        PrefManager.setString(this, "Beacon02coordinates", Beacon02coordinates.getText().toString());
+        PrefManager.setString(this, "Beacon03coordinates", Beacon03coordinates.getText().toString());
     }
 
 
