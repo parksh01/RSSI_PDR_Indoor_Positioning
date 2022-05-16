@@ -246,6 +246,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         bluetoothAdapter.startLeScan(leScanCallback);
+        /*
+        Start logging distances between each beacons and device, by every constant time interval.
+         */
     }
 
     public void onStopClicked(View view) {
@@ -256,6 +259,9 @@ public class MainActivity extends AppCompatActivity {
         }
         bluetoothAdapter.stopLeScan(leScanCallback);
         adapter.notifyDataSetChanged();
+        /*
+        Stop logging distances between each beacons and device.
+         */
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
