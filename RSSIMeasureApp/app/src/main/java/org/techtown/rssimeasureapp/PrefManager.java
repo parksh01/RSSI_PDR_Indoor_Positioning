@@ -22,4 +22,16 @@ public class PrefManager {
         SharedPreferences prefs = getPrefences(context);
         return prefs.getString(key, defaultValue);
     }
+
+    public static void setBoolean(Context context, String key, boolean value){
+        SharedPreferences prefs = getPrefences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(key, value);
+        editor.commit();
+    }
+
+    public static boolean getBoolean(Context context, String key, boolean defaultValue){
+        SharedPreferences prefs = getPrefences(context);
+        return prefs.getBoolean(key, defaultValue);
+    }
 }
