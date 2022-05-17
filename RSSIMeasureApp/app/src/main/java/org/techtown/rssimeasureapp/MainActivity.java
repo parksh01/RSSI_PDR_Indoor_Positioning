@@ -47,6 +47,11 @@ public class MainActivity extends AppCompatActivity {
     EditText Beacon01coordinates, Beacon02coordinates, Beacon03coordinates;
     CheckBox Beacon01isBack, Beacon02isBack, Beacon03isBack;
 
+    // Log Generator
+    LogGenerator logGen;
+    int timeInterval;
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +83,10 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.BTlist);
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
+
+        // Log Generator
+        logGen = new LogGenerator(3);
+        timeInterval = 200;
 
         // storing form into SharedPreferences.
         String RSSItoDist_A_value = PrefManager.getString(this, "RSSItoDist_A_front", "-51.216");
@@ -246,9 +255,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         bluetoothAdapter.startLeScan(leScanCallback);
-        /*
-        Start logging distances between each beacons and device, by every constant time interval.
-         */
+        logGen.startLogging(adapter, timeInterval);
     }
 
     public void onStopClicked(View view) {
@@ -259,83 +266,21 @@ public class MainActivity extends AppCompatActivity {
         }
         bluetoothAdapter.stopLeScan(leScanCallback);
         adapter.notifyDataSetChanged();
-        /*
-        Stop logging distances between each beacons and device.
-         */
+        logGen.stopLogging();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void onLogClicked(View view) {
         // Generate Log File
-        for(int i = 0; i < adapter.getCount(); i++){
-            // File name is MAC address of device and current time.
-            String fileTitle = adapter.address.get(i).replace(":", "") + "-" + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + ".csv";
-            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileTitle);
-            try {
-                if (!file.exists()) {
-                    file.createNewFile();
-                }
-                FileWriter writer = new FileWriter(file, false);
-                double stdev_rssi = 0;
-                double avg_rssi = 0;
-                int sum_rssi = 0;
-
-                double stdev_rssiKalman = 0;
-                double avg_rssiKalman = 0;
-                int sum_rssiKalman = 0;
-
-                double stdev_distance = 0;
-                double avg_distance = 0;
-                double sum_distance = 0;
-
-                // get raw data
-                String str = "rssi,rssiKarman,distance" + '\n';
-                for(int j = 0; j < adapter.rssi.get(i).size(); j++){
-                    str += adapter.rssi.get(i).get(j);
-                    sum_rssi += Integer.parseInt(adapter.rssi.get(i).get(j));
-                    str += ',';
-
-                    str += adapter.rssiKalman.get(i).get(j);
-                    sum_rssiKalman += Integer.parseInt(adapter.rssiKalman.get(i).get(j));
-                    str += ',';
-
-                    str += adapter.distance.get(i).get(j);
-                    sum_distance += Double.parseDouble(adapter.distance.get(i).get(j));
-                    str += '\n';
-                }
-
-                // get average
-                str += "avg(rssi),avg(rssiKalman),avg(distance)\n";
-                avg_rssi = (double)sum_rssi / (double)adapter.rssi.get(i).size();
-                avg_rssiKalman = (double)sum_rssiKalman / (double)adapter.rssiKalman.get(i).size();
-                avg_distance = sum_distance / (double)adapter.distance.get(i).size();
-                str += "" + avg_rssi + ',' + avg_rssiKalman + ',' + avg_distance + '\n';
-
-                // get standard deviation
-                for(int j = 0; j < adapter.rssi.get(i).size(); j++){
-                    stdev_rssi += Math.pow(avg_rssi - (double)Integer.parseInt(adapter.rssi.get(i).get(j)), 2);
-                    stdev_rssiKalman += Math.pow(avg_rssiKalman - (double)Integer.parseInt(adapter.rssiKalman.get(i).get(j)), 2);
-                    stdev_distance += Math.pow(avg_distance - Double.parseDouble(adapter.distance.get(i).get(j)), 2);
-                }
-                stdev_rssi = Math.sqrt(stdev_rssi / (double)adapter.rssi.get(i).size());
-                stdev_rssiKalman = Math.sqrt(stdev_rssiKalman / (double)adapter.rssiKalman.get(i).size());
-                stdev_distance = Math.sqrt(stdev_distance / (double)adapter.distance.get(i).size());
-
-                str += "stdev(rssi),stdev(rssiKalman),stdev(distance)\n";
-                str += "" + stdev_rssi + "," + stdev_rssiKalman + "," + stdev_distance;
-
-                // close the file
-                writer.write(str);
-                writer.close();
-            } catch (IOException e) {
-
-            }
-        }
+        logGen.generateBeaconLog(adapter);
+        logGen.generateDistanceLog(adapter);
         Toast.makeText(this, "Log Generated", Toast.LENGTH_SHORT).show();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void onClearClicked(View view) {
         adapter.clear();
         adapter.notifyDataSetChanged();
+        logGen.clear();
     }
 }

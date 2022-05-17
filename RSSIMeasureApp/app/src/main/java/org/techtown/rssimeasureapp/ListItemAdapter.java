@@ -1,6 +1,7 @@
 package org.techtown.rssimeasureapp;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,10 @@ public class ListItemAdapter extends BaseAdapter {
     Context context;
 
     ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
+
+    public String getTopItem(ArrayList<String> list){
+        return list.get(list.size() - 1);
+    }
 
     @Override
     public int getCount() {
@@ -70,6 +75,9 @@ public class ListItemAdapter extends BaseAdapter {
         temp = new ArrayList<String>();
         temp.add(rssi);
         this.rssi.add(temp);
+
+        temp = new ArrayList<String>();
+        temp.add(rssi);
         this.rssiKalman.add(temp);
 
         temp = new ArrayList<String>();
