@@ -20,6 +20,7 @@ import java.util.TimerTask;
 
 public class LogGenerator {
     private ArrayList<ArrayList<String>> distanceData = new ArrayList<ArrayList<String>>();
+    private ArrayList<Long> timeStamp = new ArrayList<Long>();
     Timer scheduler;
     LocalTime startTime;
     int size;
@@ -30,11 +31,12 @@ public class LogGenerator {
         for(int i=0;i<size;i++){
             distanceData.add(new ArrayList<String>());
         }
-        startTime = LocalTime.now();
+        startTime = null;
         this.size = size;
         this.dataCollected = 0;
     }
 
+    // Generating RSSI log from each beacon
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void generateBeaconLog(ListItemAdapter adapter){
         for(int i = 0; i < adapter.getCount(); i++){
@@ -103,19 +105,26 @@ public class LogGenerator {
         }
     }
 
+    // Starting logging distance data from each beacon.
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void startLogging(ListItemAdapter adapter, int interval){
+        if(startTime == null){
+            startTime = LocalTime.now();
+        }
         scheduler = new Timer();
         TimerTask task = new TimerTask() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void run() {
                 for(int i=0;i<size;i++){
-                    try{
+                    String beaconName = "Beacon #" + (i + 1);
+                    if(adapter.device.contains(beaconName)){
                         distanceData.get(i).add(adapter.getTopItem(adapter.distance.get(i)));
                     }
-                    catch(IndexOutOfBoundsException exception){
+                    else{
                         distanceData.get(i).add("null");
                     }
+                    timeStamp.add(ChronoUnit.MILLIS.between(startTime, LocalTime.now()));
                 }
                 Log.v("test", "" + (ChronoUnit.MILLIS.between(startTime, LocalTime.now()) + "/" + distanceData.get(0).get(distanceData.get(0).size() - 1) + "/" + distanceData.get(1).get(distanceData.get(1).size() - 1) + "/" + distanceData.get(2).get(distanceData.get(2).size() - 1)));
                 dataCollected++;
@@ -141,14 +150,9 @@ public class LogGenerator {
 
             // Write log on file.
             // First row is device name.
-            String str = "";
+            String str = "time,";
             for(int i= 0;i<size;i++){
-                try{
-                    str += adapter.device.get(i);
-                }
-                catch(IndexOutOfBoundsException e){
-                    str += "No Device";
-                }
+                str += "Beacon #" + (i + 1);
                 if(i != size - 1){
                     str += ',';
                 }
@@ -159,13 +163,9 @@ public class LogGenerator {
 
             // and write raw data
             for(int i = 0;i<dataCollected;i++){
+                str += timeStamp.get(i) + ',';
                 for(int j = 0;j<size;j++){
-                    try{
-                        str += distanceData.get(j).get(i);
-                    }
-                    catch(IndexOutOfBoundsException e){
-                        str += "null";
-                    }
+                    str += distanceData.get(j).get(i);
                     if(j != size - 1){
                         str += ',';
                     }
@@ -186,10 +186,11 @@ public class LogGenerator {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void clear() {
-        startTime = LocalTime.now();
+        startTime = null;
         for(int i=0;i<size;i++){
             distanceData.get(i).clear();
         }
+        timeStamp.clear();
         dataCollected = 0;
     }
 }
