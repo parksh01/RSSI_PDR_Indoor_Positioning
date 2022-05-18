@@ -119,14 +119,14 @@ public class LogGenerator {
                 for(int i=0;i<size;i++){
                     String beaconName = "Beacon #" + (i + 1);
                     if(adapter.device.contains(beaconName)){
-                        distanceData.get(i).add(adapter.getTopItem(adapter.distance.get(i)));
+                        distanceData.get(i).add(adapter.getTopItem(adapter.distance.get(adapter.device.indexOf(beaconName))));
                     }
                     else{
                         distanceData.get(i).add("null");
                     }
-                    timeStamp.add(ChronoUnit.MILLIS.between(startTime, LocalTime.now()));
                 }
-                Log.v("test", "" + (ChronoUnit.MILLIS.between(startTime, LocalTime.now()) + "/" + distanceData.get(0).get(distanceData.get(0).size() - 1) + "/" + distanceData.get(1).get(distanceData.get(1).size() - 1) + "/" + distanceData.get(2).get(distanceData.get(2).size() - 1)));
+                timeStamp.add(ChronoUnit.MILLIS.between(startTime, LocalTime.now()));
+                Log.v("test", "" + dataCollected + "/" + (ChronoUnit.MILLIS.between(startTime, LocalTime.now()) + "/" + distanceData.get(0).get(distanceData.get(0).size() - 1) + "/" + distanceData.get(1).get(distanceData.get(1).size() - 1) + "/" + distanceData.get(2).get(distanceData.get(2).size() - 1)));
                 dataCollected++;
             }
         };
@@ -150,7 +150,7 @@ public class LogGenerator {
 
             // Write log on file.
             // First row is device name.
-            String str = "time,";
+            String str = "tick,time,";
             for(int i= 0;i<size;i++){
                 str += "Beacon #" + (i + 1);
                 if(i != size - 1){
@@ -163,7 +163,10 @@ public class LogGenerator {
 
             // and write raw data
             for(int i = 0;i<dataCollected;i++){
-                str += timeStamp.get(i) + ',';
+                str += ""+i;
+                str += ',';
+                str += timeStamp.get(i);
+                str += ',';
                 for(int j = 0;j<size;j++){
                     str += distanceData.get(j).get(i);
                     if(j != size - 1){
