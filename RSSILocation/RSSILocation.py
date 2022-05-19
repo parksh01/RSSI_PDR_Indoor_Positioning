@@ -2,7 +2,9 @@ from math import sqrt
 
 import numpy as np
 
+# Type 1 : 일자배열 / Type 2 : 삼변측량
 type = input("Type? 1 / 2 : ")
+
 
 def coorAdd(coor1, coor2):
     return [coor1[0] + coor2[0], coor1[1] + coor2[1]]
@@ -17,7 +19,11 @@ r3 = 0
 x = []
 y = []
 
+x_error_avg = []
+y_error_avg = []
+
 if type == '1':
+    how_many_beacons = input("how many beacons? (2 / 3) : ")
     for i in range(3):
         for j in range(3):
             # aspect coordination is (i, j)
@@ -59,13 +65,38 @@ if type == '1':
             x.append((r3**2 - r1**2 - x2**2)/(-2*x2))
             y.append(sqrt(abs(r1**2 - x[2]**2)))
 
-            print('=== aspect coordinate : (' + str(i+1) + ', ' + str(j+1) + ')')
-
+            print('=== aspect coordinate : (' + str(i+1) + ', ' + str(j+1) + ') ===')
+            """
             print(x)
             print(y)
+            """
 
-            print('coord : (' + str(np.average(x)) + ', ' + str(np.average(y)) + ')')
-            print('error : (' + str(abs((i+1)-np.average(x))) + ',' + str(abs((j+1)-np.average(y))) + ')')
+            x_avg = 0
+            y_avg = 0
+            if how_many_beacons == '3':
+                x_avg = np.average(x)
+                y_avg = np.average(y)
+            elif how_many_beacons == '2':
+                # beacon at (2,0) is omitted
+                x_avg = x[1]
+                y_avg = y[1]
+
+            print('coord : (' + str(x_avg) + ', ' + str(y_avg) + ')')
+            print('error : (' + str(abs((i + 1) - x_avg)) + ',' + str(abs((j + 1) - y_avg)) + ')')
+            x_error_avg.append(abs((i + 1) - x_avg))
+            y_error_avg.append(abs((j + 1) - y_avg))
+
+            aspectDist = [sqrt((i+1)**2 + (j+1)**2), sqrt((i+1 - x1)**2 + (j+1)**2), sqrt( (i+1 - x2)**2 + (j+1)**2 )]
+            measuredDist = [r1, r2, r3]
+            errorDist = []
+            for n in range(3):
+                errorDist.append(abs(aspectDist[n] - measuredDist[n]))
+
+            print('aspect distance : ', aspectDist)
+            print('measured distance : ', measuredDist)
+            print('error : ', errorDist)
+
+            f.close()
 
 elif type == '2':
     for i in range(3):
@@ -105,10 +136,33 @@ elif type == '2':
             y.append((r3**2 - r1**2 - y2**2)/(-2*y2))
             x.append(sqrt(abs(r1**2-y[1]**2)))
 
-            print('=== aspect coordinate : (' + str(i + 1) + ', ' + str(j + 1) + ')')
+            print('=== aspect coordinate : (' + str(i + 1) + ', ' + str(j + 1) + ') ===')
 
+            """
             print(x)
             print(y)
+            """
 
-            print('coord : (' + str(np.average(x)) + ', ' + str(np.average(y)) + ')')
-            print('error : (' + str(abs((i + 1) - np.average(x))) + ',' + str(abs((j + 1) - np.average(y))) + ')')
+            x_avg = np.average(x)
+            y_avg = np.average(y)
+
+            print('coord : (' + str(x_avg) + ', ' + str(y_avg) + ')')
+            print('error : (' + str(abs((i + 1) - x_avg)) + ',' + str(abs((j + 1) - y_avg)) + ')')
+            x_error_avg.append(abs((i + 1) - x_avg))
+            y_error_avg.append(abs((j + 1) - y_avg))
+
+            aspectDist = [sqrt((i + 1) ** 2 + (j + 1) ** 2), sqrt((i + 1 - x1) ** 2 + (j + 1) ** 2), sqrt((i + 1) ** 2 + (j + 1 - y2) ** 2)]
+            measuredDist = [r1, r2, r3]
+            errorDist = []
+            for n in range(3):
+                errorDist.append(abs(aspectDist[n] - measuredDist[n]))
+
+            print('aspect distance : ', aspectDist)
+            print('measured distance : ', measuredDist)
+            print('error : ', errorDist)
+
+            f.close()
+
+print()
+print('avg coord error : ', np.average(x_error_avg), ',', np.average(y_error_avg))
+print('coord error dev : ', np.std(x_error_avg), ',', np.std(y_error_avg))
