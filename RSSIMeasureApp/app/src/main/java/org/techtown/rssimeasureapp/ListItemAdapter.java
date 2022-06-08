@@ -21,6 +21,7 @@ public class ListItemAdapter extends BaseAdapter {
     Context context;
 
     ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
+    public ArrayList<Beacon> beacon = new ArrayList<Beacon>();
 
     public String getTopItem(ArrayList<String> list){
         return list.get(list.size() - 1);
@@ -28,12 +29,12 @@ public class ListItemAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return address.size();
+        return beacon.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return address.get(i);
+        return beacon.get(i);
     }
 
     @Override
@@ -54,6 +55,7 @@ public class ListItemAdapter extends BaseAdapter {
         TextView addressText = convertView.findViewById(R.id.address);
         TextView rssiText = convertView.findViewById(R.id.rssi);
 
+        /*
         deviceText.setText(this.device.get(position));
         addressText.setText(this.address.get(position));
         rssiText.setText(this.rssi.get(position).get(this.rssi.get(position).size() - 1) +
@@ -63,6 +65,16 @@ public class ListItemAdapter extends BaseAdapter {
                 this.distance.get(position).get(this.distance.get(position).size() - 1) +
                 " tick : " +
                 this.tick.get(position));
+        */
+        deviceText.setText("Beacon #" + Integer.toString(this.beacon.get(position).beaconNumber));
+        addressText.setText(this.beacon.get(position).MACaddress);
+        rssiText.setText(this.beacon.get(position).rssi.get(this.beacon.get(position).tick - 1) +
+                " / kf : " +
+                this.beacon.get(position).rssiKalman.get(this.beacon.get(position).tick - 1) +
+                " / d : " +
+                this.beacon.get(position).distance.get(this.beacon.get(position).tick - 1) +
+                " tick : " +
+                Integer.toString(this.beacon.get(position).tick));
         return convertView;
     }
 
@@ -88,6 +100,11 @@ public class ListItemAdapter extends BaseAdapter {
 
         this.kf.add(new KalmanFilter());
     }
+
+    public void addItem(Beacon beacon){
+        this.beacon.add(beacon);
+    }
+
     public void setItem(String device, String address, String rssi, float RSSItoDist_A_value, float RSSItoDist_n_value, int index){
         double filteredRSSI = kf.get(index).filtering(Integer.parseInt(rssi));
 
@@ -99,6 +116,10 @@ public class ListItemAdapter extends BaseAdapter {
         this.tick.set(index, "" + (Integer.parseInt(this.tick.get(index)) + 1));
     }
 
+    public void setItem(Beacon beacon, int rssi, int index){
+        this.beacon.get(index).setRssi(rssi);
+    }
+
     public void clear() {
         device.clear();
         address.clear();
@@ -107,6 +128,7 @@ public class ListItemAdapter extends BaseAdapter {
         distance.clear();
         tick.clear();
         kf.clear();
+        beacon.clear();
     }
 
     public void sort() {

@@ -41,7 +41,7 @@ public class LogGenerator {
     public void generateBeaconLog(ListItemAdapter adapter){
         for(int i = 0; i < adapter.getCount(); i++){
             // File name is MAC address of device and current time.
-            String fileTitle = adapter.address.get(i).replace(":", "") + "-" + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + ".csv";
+            String fileTitle = adapter.beacon.get(i).MACaddress.replace(":", "") + "-" + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + ".csv";
             File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileTitle);
             try {
                 if (!file.exists()) {
@@ -62,36 +62,36 @@ public class LogGenerator {
 
                 // get raw data
                 String str = "rssi,rssiKarman,distance" + '\n';
-                for(int j = 0; j < adapter.rssi.get(i).size(); j++){
-                    str += adapter.rssi.get(i).get(j);
-                    sum_rssi += Integer.parseInt(adapter.rssi.get(i).get(j));
+                for(int j = 0; j < adapter.beacon.get(i).rssi.size(); j++){
+                    str += adapter.beacon.get(i).rssi.get(j);
+                    sum_rssi += Integer.parseInt(adapter.beacon.get(i).rssi.get(j));
                     str += ',';
 
-                    str += adapter.rssiKalman.get(i).get(j);
-                    sum_rssiKalman += Double.parseDouble(adapter.rssiKalman.get(i).get(j));
+                    str += adapter.beacon.get(i).rssiKalman.get(j);
+                    sum_rssiKalman += Double.parseDouble(adapter.beacon.get(i).rssiKalman.get(j));
                     str += ',';
 
-                    str += adapter.distance.get(i).get(j);
-                    sum_distance += Double.parseDouble(adapter.distance.get(i).get(j));
+                    str += adapter.beacon.get(i).distance.get(j);
+                    sum_distance += Double.parseDouble(adapter.beacon.get(i).distance.get(j));
                     str += '\n';
                 }
 
                 // get average
                 str += "avg(rssi),avg(rssiKalman),avg(distance)\n";
-                avg_rssi = (double)sum_rssi / (double)adapter.rssi.get(i).size();
-                avg_rssiKalman = (double)sum_rssiKalman / (double)adapter.rssiKalman.get(i).size();
-                avg_distance = sum_distance / (double)adapter.distance.get(i).size();
+                avg_rssi = (double)sum_rssi / (double)adapter.beacon.get(i).rssi.size();
+                avg_rssiKalman = (double)sum_rssiKalman / (double)adapter.beacon.get(i).rssiKalman.size();
+                avg_distance = sum_distance / (double)adapter.beacon.get(i).distance.size();
                 str += "" + avg_rssi + ',' + avg_rssiKalman + ',' + avg_distance + '\n';
 
                 // get standard deviation
-                for(int j = 0; j < adapter.rssi.get(i).size(); j++){
-                    stdev_rssi += Math.pow(avg_rssi - (double)Integer.parseInt(adapter.rssi.get(i).get(j)), 2);
-                    stdev_rssiKalman += Math.pow(avg_rssiKalman - Double.parseDouble(adapter.rssiKalman.get(i).get(j)), 2);
-                    stdev_distance += Math.pow(avg_distance - Double.parseDouble(adapter.distance.get(i).get(j)), 2);
+                for(int j = 0; j < adapter.beacon.get(i).rssi.size(); j++){
+                    stdev_rssi += Math.pow(avg_rssi - (double)Integer.parseInt(adapter.beacon.get(i).rssi.get(j)), 2);
+                    stdev_rssiKalman += Math.pow(avg_rssiKalman - Double.parseDouble(adapter.beacon.get(i).rssiKalman.get(j)), 2);
+                    stdev_distance += Math.pow(avg_distance - Double.parseDouble(adapter.beacon.get(i).distance.get(j)), 2);
                 }
-                stdev_rssi = Math.sqrt(stdev_rssi / (double)adapter.rssi.get(i).size());
-                stdev_rssiKalman = Math.sqrt(stdev_rssiKalman / (double)adapter.rssiKalman.get(i).size());
-                stdev_distance = Math.sqrt(stdev_distance / (double)adapter.distance.get(i).size());
+                stdev_rssi = Math.sqrt(stdev_rssi / (double)adapter.beacon.get(i).rssi.size());
+                stdev_rssiKalman = Math.sqrt(stdev_rssiKalman / (double)adapter.beacon.get(i).rssiKalman.size());
+                stdev_distance = Math.sqrt(stdev_distance / (double)adapter.beacon.get(i).distance.size());
 
                 str += "stdev(rssi),stdev(rssiKalman),stdev(distance)\n";
                 str += "" + stdev_rssi + "," + stdev_rssiKalman + "," + stdev_distance;
@@ -103,6 +103,15 @@ public class LogGenerator {
 
             }
         }
+    }
+
+    boolean isExist(ListItemAdapter adapter, int beaconNumber){
+        for(int i = 0;i < adapter.beacon.size();i++){
+            if(adapter.beacon.get(i).beaconNumber == beaconNumber){
+                return true;
+            }
+        }
+        return false;
     }
 
     // Starting logging distance data from each beacon.
@@ -118,8 +127,14 @@ public class LogGenerator {
             public void run() {
                 for(int i=0;i<size;i++){
                     String beaconName = "Beacon #" + (i + 1);
-                    if(adapter.device.contains(beaconName)){
-                        distanceData.get(i).add(adapter.getTopItem(adapter.distance.get(adapter.device.indexOf(beaconName))));
+                    if(isExist(adapter, i+1)){
+                        int beaconIndex = 0;
+                        for(int j = 0;j < adapter.beacon.size();j++){
+                            if(adapter.beacon.get(j).beaconNumber == i + 1){
+                                beaconIndex = j;
+                            }
+                        }
+                        distanceData.get(i).add(adapter.beacon.get(beaconIndex).distance.get(adapter.beacon.get(beaconIndex).tick - 1));
                     }
                     else{
                         distanceData.get(i).add("null");

@@ -24,10 +24,12 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.CollationElementIterator;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -188,25 +190,36 @@ public class MainActivity extends AppCompatActivity {
                             RSSItoDist_A_value_back = Float.parseFloat(RSSItoDist_A_back.getText().toString());
                             RSSItoDist_n_value_back = Float.parseFloat(RSSItoDist_n_back.getText().toString());
                         }
-
-                        // Update beacon list.
-                        // first, check if the beacon is already discovered. (if not, index is -1)
-                        int index = adapter.address.indexOf(device.getAddress());
-
                         // get beacon number from MAC address
                         String beaconNumber = "Unknown";
+                        int beaconOrder = 0;
                         if(getString(R.string.BeaconAddress01).equals(device.getAddress())){
                             beaconNumber = "Beacon #1";
+                            beaconOrder = 1;
                             isBack = Beacon01isBack.isChecked();
                         }
                         else if(getString(R.string.BeaconAddress02).equals(device.getAddress())){
                             beaconNumber = "Beacon #2";
+                            beaconOrder = 2;
                             isBack = Beacon02isBack.isChecked();
                         }
                         else if(getString(R.string.BeaconAddress03).equals(device.getAddress())){
                             beaconNumber = "Beacon #3";
+                            beaconOrder = 3;
                             isBack = Beacon03isBack.isChecked();
                         }
+
+                        // Update beacon list.
+                        // first, check if the beacon is already discovered. (if not, index is -1)
+                        int index = adapter.address.indexOf(device.getAddress());
+                        int beaconIndex = 0;
+                        for(int i = 0;i<adapter.beacon.size();i++){
+                            if(adapter.beacon.get(i).beaconNumber == beaconOrder){
+                                beaconIndex = i;
+                                break;
+                            }
+                        }
+
 
                         // if there is new beacon discovered, add it to the device list.
                         if (index == -1) {
@@ -220,6 +233,11 @@ public class MainActivity extends AppCompatActivity {
                             else{
                                 adapter.addItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value_back, RSSItoDist_n_value_back);
                             }
+                            adapter.beacon.add(new Beacon(device.getAddress(), RSSItoDist_A_value, RSSItoDist_n_value, RSSItoDist_A_value_back, RSSItoDist_n_value_back, beaconOrder, !isBack));
+                            adapter.beacon.get(adapter.beacon.size()-1).setRssi(rssi);
+
+                            // if there are multiple beacons already discovered, sort it.
+                            Collections.sort(adapter.beacon);
                             if(adapter.getCount() >= 2){
                                 for(int i = 0;i < adapter.getCount() - 1;i++){
                                     if(adapter.device.get(i).compareTo(adapter.device.get(i+1)) > 0){
@@ -233,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
+                            adapter.beacon.get(index).setRssi(rssi);
                             if(!isBack) {
                                 adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value, RSSItoDist_n_value, index);
                             }
@@ -247,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void onScanClicked(View view) {
         Toast.makeText(this, "Scan Start", Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
