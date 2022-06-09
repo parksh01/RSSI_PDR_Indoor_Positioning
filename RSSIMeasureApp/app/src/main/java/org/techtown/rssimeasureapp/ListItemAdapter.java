@@ -12,20 +12,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class ListItemAdapter extends BaseAdapter {
-    ArrayList<String> device = new ArrayList<String>();
-    ArrayList<String> address = new ArrayList<String>(); // each devices are distinguished by its MAC address.
-    ArrayList<ArrayList<String>> rssi = new ArrayList<ArrayList<String>>();
-    ArrayList<ArrayList<String>> rssiKalman = new ArrayList<ArrayList<String>>();
-    ArrayList<ArrayList<String>> distance = new ArrayList<ArrayList<String>>();
-    ArrayList<String> tick = new ArrayList<String>();
     Context context;
 
-    ArrayList<KalmanFilter> kf = new ArrayList<KalmanFilter>();
     public ArrayList<Beacon> beacon = new ArrayList<Beacon>();
-
-    public String getTopItem(ArrayList<String> list){
-        return list.get(list.size() - 1);
-    }
 
     @Override
     public int getCount() {
@@ -68,101 +57,7 @@ public class ListItemAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void addItem(String device, String address, String rssi, float RSSItoDist_A_value, float RSSItoDist_n_value){
-        ArrayList<String> temp;
-
-        this.device.add(device);
-        this.address.add(address);
-
-        temp = new ArrayList<String>();
-        temp.add(rssi);
-        this.rssi.add(temp);
-
-        temp = new ArrayList<String>();
-        temp.add(rssi);
-        this.rssiKalman.add(temp);
-
-        temp = new ArrayList<String>();
-        temp.add(String.format("%.3f", Triangulation.RssiToDistance(Double.parseDouble(rssi), RSSItoDist_A_value, RSSItoDist_n_value)));
-        this.distance.add(temp);
-
-        this.tick.add("1");
-
-        this.kf.add(new KalmanFilter());
-    }
-
-    public void addItem(Beacon beacon){
-        this.beacon.add(beacon);
-    }
-
-    public void setItem(String device, String address, String rssi, float RSSItoDist_A_value, float RSSItoDist_n_value, int index){
-        double filteredRSSI = kf.get(index).filtering(Integer.parseInt(rssi));
-
-        this.device.set(index, device);
-        this.address.set(index, address);
-        this.rssi.get(index).add(rssi);
-        this.rssiKalman.get(index).add(String.format("%.3f", filteredRSSI));
-        this.distance.get(index).add(String.format("%.3f", Triangulation.RssiToDistance(filteredRSSI, RSSItoDist_A_value, RSSItoDist_n_value)));
-        this.tick.set(index, "" + (Integer.parseInt(this.tick.get(index)) + 1));
-    }
-
-    public void setItem(Beacon beacon, int rssi, int index){
-        this.beacon.get(index).setRssi(rssi);
-    }
-
     public void clear() {
-        device.clear();
-        address.clear();
-        rssi.clear();
-        rssiKalman.clear();
-        distance.clear();
-        tick.clear();
-        kf.clear();
         beacon.clear();
-    }
-
-    public void sort() {
-        for(int i = 0;i<this.getCount()-1;i++){
-            if(this.device.get(i).compareTo(this.device.get(i+1)) > 0){
-                String tempString;
-                ArrayList<String> tempArray = new ArrayList<String>();
-                KalmanFilter tempKF;
-
-                // swap 'device'
-                tempString = this.device.get(i);
-                this.device.set(i, this.device.get(i+1));
-                this.device.set(i+1, tempString);
-
-                // swap 'address'
-                tempString = this.address.get(i);
-                this.address.set(i, this.address.get(i+1));
-                this.address.set(i+1, tempString);
-
-                // swap 'rssi'
-                tempArray = this.rssi.get(i);
-                this.rssi.set(i, this.rssi.get(i+1));
-                this.rssi.set(i+1, tempArray);
-
-                // swap 'rssiKalman'
-                tempArray = this.rssiKalman.get(i);
-                this.rssiKalman.set(i, this.rssiKalman.get(i+1));
-                this.rssiKalman.set(i+1, tempArray);
-
-                // swap 'distance'
-                tempArray = this.distance.get(i);
-                this.distance.set(i, this.distance.get(i+1));
-                this.distance.set(i+1, tempArray);
-
-                // swap 'tick'
-                tempString = this.tick.get(i);
-                this.tick.set(i, this.tick.get(i+1));
-                this.tick.set(i+1, tempString);
-
-                // swap 'kf'
-                tempKF = this.kf.get(i);
-                this.kf.set(i, this.kf.get(i+1));
-                this.kf.set(i+1, tempKF);
-            }
-        }
     }
 }

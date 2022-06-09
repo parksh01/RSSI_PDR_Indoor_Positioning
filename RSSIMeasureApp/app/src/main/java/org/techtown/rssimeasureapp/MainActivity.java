@@ -220,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
 
                         // Update beacon list.
                         // first, check if the beacon is already discovered. (if not, index is -1)
-                        int index = adapter.address.indexOf(device.getAddress());
                         int beaconIndex = -1;
                         for(int i = 0;i<adapter.beacon.size();i++){
                             if(adapter.beacon.get(i).beaconNumber == beaconOrder){
@@ -235,12 +234,6 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-                            if(!isBack){
-                                adapter.addItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value, RSSItoDist_n_value);
-                            }
-                            else{
-                                adapter.addItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value_back, RSSItoDist_n_value_back);
-                            }
                             adapter.beacon.add(new Beacon(device.getAddress(), RSSItoDist_A_value, RSSItoDist_n_value, RSSItoDist_A_value_back, RSSItoDist_n_value_back, beaconOrder, !isBack));
                             adapter.beacon.get(adapter.beacon.size()-1).setRssi(rssi);
 
@@ -250,12 +243,6 @@ public class MainActivity extends AppCompatActivity {
                         // if there is a beacon already in the device list, update it.
                         else {
                             adapter.beacon.get(beaconIndex).setRssi(rssi);
-                            if(!isBack) {
-                                adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value, RSSItoDist_n_value, index);
-                            }
-                            else{
-                                adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value_back, RSSItoDist_n_value_back, index);
-                            }
                         }
                         adapter.notifyDataSetChanged();
                     }
