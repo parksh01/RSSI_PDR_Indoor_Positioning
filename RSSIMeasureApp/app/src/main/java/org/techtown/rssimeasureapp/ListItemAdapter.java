@@ -55,17 +55,6 @@ public class ListItemAdapter extends BaseAdapter {
         TextView addressText = convertView.findViewById(R.id.address);
         TextView rssiText = convertView.findViewById(R.id.rssi);
 
-        /*
-        deviceText.setText(this.device.get(position));
-        addressText.setText(this.address.get(position));
-        rssiText.setText(this.rssi.get(position).get(this.rssi.get(position).size() - 1) +
-                " / kf : " +
-                this.rssiKalman.get(position).get(this.rssiKalman.get(position).size() - 1) +
-                " / d : " +
-                this.distance.get(position).get(this.distance.get(position).size() - 1) +
-                " tick : " +
-                this.tick.get(position));
-        */
         deviceText.setText("Beacon #" + Integer.toString(this.beacon.get(position).beaconNumber));
         addressText.setText(this.beacon.get(position).MACaddress);
         rssiText.setText(this.beacon.get(position).rssi.get(this.beacon.get(position).tick - 1) +
@@ -75,6 +64,7 @@ public class ListItemAdapter extends BaseAdapter {
                 this.beacon.get(position).distance.get(this.beacon.get(position).tick - 1) +
                 " tick : " +
                 Integer.toString(this.beacon.get(position).tick));
+
         return convertView;
     }
 

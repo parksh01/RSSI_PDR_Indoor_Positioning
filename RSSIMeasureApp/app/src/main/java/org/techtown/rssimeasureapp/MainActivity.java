@@ -21,7 +21,9 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.CollationElementIterator;
@@ -59,13 +61,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Required Permission : Location, File Write
+        // Required Permission : Location, File Write, File Read
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 MY_PERMISSIONS_REQUEST_LOCATION);
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                 MODE_PRIVATE);
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                MODE_PRIVATE
+                );
 
         // Android 12 Requires additional permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -125,6 +131,9 @@ public class MainActivity extends AppCompatActivity {
 
         Beacon03isBack = findViewById(R.id.Beacon3isBack);
         Beacon03isBack.setChecked(PrefManager.getBoolean(this,"Beacon03isChecked", false));
+
+        // read values from config file.
+        // adapter.beacon = Beacon.readConfig("BeaconConfig.csv");
     }
 
     @Override
@@ -212,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         // Update beacon list.
                         // first, check if the beacon is already discovered. (if not, index is -1)
                         int index = adapter.address.indexOf(device.getAddress());
-                        int beaconIndex = 0;
+                        int beaconIndex = -1;
                         for(int i = 0;i<adapter.beacon.size();i++){
                             if(adapter.beacon.get(i).beaconNumber == beaconOrder){
                                 beaconIndex = i;
@@ -220,9 +229,8 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
 
-
                         // if there is new beacon discovered, add it to the device list.
-                        if (index == -1) {
+                        if (beaconIndex == -1) {
                             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                                 Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
                                 return;
@@ -238,20 +246,10 @@ public class MainActivity extends AppCompatActivity {
 
                             // if there are multiple beacons already discovered, sort it.
                             Collections.sort(adapter.beacon);
-                            if(adapter.getCount() >= 2){
-                                for(int i = 0;i < adapter.getCount() - 1;i++){
-                                    if(adapter.device.get(i).compareTo(adapter.device.get(i+1)) > 0){
-                                        isSorted = false;
-                                    }
-                                }
-                            }
-                            if(isSorted == false){
-                                adapter.sort();
-                            }
                         }
                         // if there is a beacon already in the device list, update it.
                         else {
-                            adapter.beacon.get(index).setRssi(rssi);
+                            adapter.beacon.get(beaconIndex).setRssi(rssi);
                             if(!isBack) {
                                 adapter.setItem(beaconNumber, device.getAddress(), Integer.toString(rssi), RSSItoDist_A_value, RSSItoDist_n_value, index);
                             }
