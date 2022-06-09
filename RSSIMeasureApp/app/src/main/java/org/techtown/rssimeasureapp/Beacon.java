@@ -1,12 +1,7 @@
 package org.techtown.rssimeasureapp;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -66,8 +61,8 @@ public class Beacon implements Comparable<Beacon>{
         this.tick++;
     }
 
-    public static ArrayList<Beacon> readConfig(String fileName){
-        ArrayList<Beacon> beaconList = new ArrayList<Beacon>();
+    public static ArrayList<String[]> readConfig(String fileName){
+        ArrayList<String[]> beaconList = new ArrayList<String[]>();
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
         try{
             if(file.exists()){
@@ -78,18 +73,7 @@ public class Beacon implements Comparable<Beacon>{
                 while( (sLine = inFile.readLine()) != null ) {
                     String[] currentBeaconInfo = sLine.split(",");
                     Log.d("configFile", currentBeaconInfo[0]);
-                    boolean isFront = true;
-                    if(currentBeaconInfo[5].equals("1")){
-                        isFront = true;
-                    }
-                    else if(currentBeaconInfo[5].equals("0")){
-                        isFront = false;
-                    }
-                    beaconList.add(new Beacon(currentBeaconInfo[0],
-                            Double.parseDouble(currentBeaconInfo[1]),
-                            Double.parseDouble(currentBeaconInfo[2]),
-                            Double.parseDouble(currentBeaconInfo[3]),
-                            Double.parseDouble(currentBeaconInfo[4]), i,isFront));
+                    beaconList.add(currentBeaconInfo);
                     i++;
                 }
                 inFile.close();

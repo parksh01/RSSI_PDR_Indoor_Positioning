@@ -42,10 +42,7 @@ public class MainActivity extends AppCompatActivity {
     // To display measured RSSI values.
     ListView listView;
     ListItemAdapter adapter;
-
-    // RSSI to Distance mapping coefficients.
-    EditText RSSItoDist_A, RSSItoDist_A_back;
-    EditText RSSItoDist_n, RSSItoDist_n_back;
+    ArrayList<String[]> beaconList;
 
     // Beacon coordinates and front/back
     EditText Beacon01coordinates, Beacon02coordinates, Beacon03coordinates;
@@ -96,23 +93,6 @@ public class MainActivity extends AppCompatActivity {
         logGen = new LogGenerator(3);
         timeInterval = 200;
 
-        // storing form into SharedPreferences.
-        String RSSItoDist_A_value = PrefManager.getString(this, "RSSItoDist_A_front", "-51.216");
-        RSSItoDist_A = findViewById(R.id.RSSItoDist_A);
-        RSSItoDist_A.setText(RSSItoDist_A_value);
-
-        String RSSItoDist_n_value = PrefManager.getString(this, "RSSItoDist_n_front", "2.261");
-        RSSItoDist_n = findViewById(R.id.RSSItoDist_n);
-        RSSItoDist_n.setText(RSSItoDist_n_value);
-
-        String RSSItoDist_A_back_value = PrefManager.getString(this, "RSSItoDist_A_back", "-52.165");
-        RSSItoDist_A_back = findViewById(R.id.RSSItoDist_A_back);
-        RSSItoDist_A_back.setText(RSSItoDist_A_back_value);
-
-        String RSSItoDist_n_back_value = PrefManager.getString(this, "RSSItoDist_n_back", "1.988");
-        RSSItoDist_n_back = findViewById(R.id.RSSItoDist_n_back);
-        RSSItoDist_n_back.setText(RSSItoDist_n_back_value);
-
         // storing values related to beacon coordinates.
         Beacon01coordinates = findViewById(R.id.Beacon1Coordinate);
         Beacon01coordinates.setText(PrefManager.getString(this, "Beacon01coordinates", "0,0"));
@@ -133,26 +113,20 @@ public class MainActivity extends AppCompatActivity {
         Beacon03isBack.setChecked(PrefManager.getBoolean(this,"Beacon03isChecked", false));
 
         // read values from config file.
-        // adapter.beacon = Beacon.readConfig("BeaconConfig.csv");
+        beaconList = Beacon.readConfig("BeaconConfig.csv");
     }
 
     @Override
     protected void onPause() {
         // Store RSSI to distance coefficients for further use.
         super.onPause();
-        PrefManager.setString(this, "RSSItoDist_A_front", RSSItoDist_A.getText().toString());
-        PrefManager.setString(this, "RSSItoDist_n_front", RSSItoDist_n.getText().toString());
-        PrefManager.setString(this, "RSSItoDist_A_back", RSSItoDist_A_back.getText().toString());
-        PrefManager.setString(this, "RSSItoDist_n_back", RSSItoDist_n_back.getText().toString());
         PrefManager.setString(this, "Beacon01coordinates", Beacon01coordinates.getText().toString());
         PrefManager.setString(this, "Beacon02coordinates", Beacon02coordinates.getText().toString());
         PrefManager.setString(this, "Beacon03coordinates", Beacon03coordinates.getText().toString());
         PrefManager.setBoolean(this, "Beacon01isChecked", Beacon01isBack.isChecked());
         PrefManager.setBoolean(this, "Beacon02isChecked", Beacon02isBack.isChecked());
         PrefManager.setBoolean(this, "Beacon03isChecked", Beacon03isBack.isChecked());
-
     }
-
 
     private void bleCheck(BluetoothAdapter bluetoothAdapter) {
         if (bluetoothAdapter == null) {
@@ -178,45 +152,20 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    boolean isSorted = true;
                     boolean isBack = false;
-                    if (
-                        // filters only desired BLE devices (beacons)
-                            getString(R.string.BeaconAddress01).equals(device.getAddress()) ||
-                            getString(R.string.BeaconAddress02).equals(device.getAddress()) ||
-                            getString(R.string.BeaconAddress03).equals(device.getAddress()) ||
-                            getString(R.string.BeaconAddress04).equals(device.getAddress())
-                    ) {
-                        float RSSItoDist_A_value = 0;
-                        float RSSItoDist_n_value = 0;
-                        float RSSItoDist_A_value_back = 0;
-                        float RSSItoDist_n_value_back = 0;
-                        if (RSSItoDist_A.getText().toString().length() != 0 && RSSItoDist_n.getText().toString().length() != 0) {
-                            RSSItoDist_A_value = Float.parseFloat(RSSItoDist_A.getText().toString());
-                            RSSItoDist_n_value = Float.parseFloat(RSSItoDist_n.getText().toString());
+                    boolean newSignal = false;
+                    int currentBeacon = -1;
+                    for(int i=0;i<beaconList.size();i++){
+                        if(beaconList.get(i)[0].equals(device.getAddress())){
+                            newSignal = true;
+                            currentBeacon = i;
+                            break;
                         }
-                        if (RSSItoDist_A_back.getText().toString().length() != 0 && RSSItoDist_n_back.getText().toString().length() != 0) {
-                            RSSItoDist_A_value_back = Float.parseFloat(RSSItoDist_A_back.getText().toString());
-                            RSSItoDist_n_value_back = Float.parseFloat(RSSItoDist_n_back.getText().toString());
-                        }
+                    }
+                    if (newSignal) {
                         // get beacon number from MAC address
                         String beaconNumber = "Unknown";
-                        int beaconOrder = 0;
-                        if(getString(R.string.BeaconAddress01).equals(device.getAddress())){
-                            beaconNumber = "Beacon #1";
-                            beaconOrder = 1;
-                            isBack = Beacon01isBack.isChecked();
-                        }
-                        else if(getString(R.string.BeaconAddress02).equals(device.getAddress())){
-                            beaconNumber = "Beacon #2";
-                            beaconOrder = 2;
-                            isBack = Beacon02isBack.isChecked();
-                        }
-                        else if(getString(R.string.BeaconAddress03).equals(device.getAddress())){
-                            beaconNumber = "Beacon #3";
-                            beaconOrder = 3;
-                            isBack = Beacon03isBack.isChecked();
-                        }
+                        int beaconOrder = currentBeacon + 1;
 
                         // Update beacon list.
                         // first, check if the beacon is already discovered. (if not, index is -1)
@@ -230,6 +179,15 @@ public class MainActivity extends AppCompatActivity {
 
                         // if there is new beacon discovered, add it to the device list.
                         if (beaconIndex == -1) {
+                            float RSSItoDist_A_value = Float.parseFloat(beaconList.get(currentBeacon)[1]);
+                            float RSSItoDist_n_value = Float.parseFloat(beaconList.get(currentBeacon)[2]);
+                            float RSSItoDist_A_value_back = Float.parseFloat(beaconList.get(currentBeacon)[3]);
+                            float RSSItoDist_n_value_back = Float.parseFloat(beaconList.get(currentBeacon)[4]);
+                            if(beaconList.get(currentBeacon)[5].equals("1")){
+                                isBack = false;
+                            } else if (beaconList.get(currentBeacon)[5].equals("0")) {
+                                isBack = true;
+                            }
                             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                                 Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
                                 return;
