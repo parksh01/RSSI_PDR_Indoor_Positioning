@@ -25,15 +25,17 @@ public class LogGenerator {
     LocalTime startTime;
     int size;
     int dataCollected;
+    int timeInterval;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public LogGenerator(int size) {
+    public LogGenerator(int size, int timeInterval) {
         for(int i=0;i<size;i++){
             distanceData.add(new ArrayList<String>());
         }
         startTime = null;
         this.size = size;
         this.dataCollected = 0;
+        this.timeInterval = timeInterval;
     }
 
     // Generating RSSI log from each beacon
@@ -116,7 +118,7 @@ public class LogGenerator {
 
     // Starting logging distance data from each beacon.
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public void startLogging(ListItemAdapter adapter, int interval){
+    public void startLogging(ListItemAdapter adapter){
         if(startTime == null){
             startTime = LocalTime.now();
         }
@@ -145,7 +147,7 @@ public class LogGenerator {
                 dataCollected++;
             }
         };
-        scheduler.scheduleAtFixedRate(task, interval, interval);
+        scheduler.scheduleAtFixedRate(task, this.timeInterval, this.timeInterval);
     }
 
     public void stopLogging(){

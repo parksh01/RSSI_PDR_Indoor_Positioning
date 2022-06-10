@@ -9,22 +9,23 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Beacon implements Comparable<Beacon>{
+    // variables related to beacon's attributions.
     public String MACaddress;
     public int beaconNumber;
-
     private double rssi_A_front;
     private double rssi_n_front;
     private double rssi_A_back;
     private double rssi_n_back;
     public boolean isFront; // true is front, false is back
 
+    // variables which beacon will keep tracking.
     public ArrayList<String> rssi;
     public ArrayList<String> rssiKalman;
     public ArrayList<String> distance;
     public int tick;
-
     private KalmanFilter kf = new KalmanFilter();
 
+    // internal method for setting basic variables.
     private void setBasicVar(String MACaddress, double A_front, double n_front, double A_back, double n_back, int beaconNumber){
         this.rssi_A_front = A_front;
         this.rssi_n_front = n_front;
@@ -38,21 +39,22 @@ public class Beacon implements Comparable<Beacon>{
         this.tick = 0;
     }
 
+    // Constructor, default is isFront=true.
     public Beacon(String MACaddress, double A_front, double n_front, double A_back, double n_back, int beaconNumber){
         setBasicVar(MACaddress, A_front, n_front, A_back, n_back, beaconNumber);
         this.isFront = true;
     }
-
     public Beacon(String MACaddress, double A_front, double n_front, double A_back, double n_back, int beaconNumber, boolean isFront){
         setBasicVar(MACaddress, A_front, n_front, A_back, n_back, beaconNumber);
         this.isFront = isFront;
     }
 
-    public double getCurrentDistance(double rssi){
+    private double getCurrentDistance(double rssi){
         if(isFront) return Triangulation.RssiToDistance(rssi, rssi_A_front, rssi_n_front);
         else return Triangulation.RssiToDistance(rssi, rssi_A_back, rssi_n_back);
     }
 
+    // read rssi and keep log of rssi, filtered rssi and calculated distance.
     public void setRssi(int rssi){
         double filteredRssi = kf.filtering(rssi);
         this.rssi.add(Integer.toString(rssi));
@@ -61,6 +63,7 @@ public class Beacon implements Comparable<Beacon>{
         this.tick++;
     }
 
+    // read config file and store values of desired devices.
     public static ArrayList<String[]> readConfig(String fileName){
         ArrayList<String[]> beaconList = new ArrayList<String[]>();
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
@@ -87,10 +90,24 @@ public class Beacon implements Comparable<Beacon>{
         return beaconList;
     }
 
+    // To use sort method, implement compareTo method.
+    // sort by beaconNumber.
     @Override
     public int compareTo(Beacon beacon) {
         if(beacon.beaconNumber < this.beaconNumber) return 1;
         else if(beacon.beaconNumber > this.beaconNumber) return -1;
         return 0;
     }
+
+    // Getters for most recent value
+    public String getCurrentRssi(){
+        return this.rssi.get(this.tick -1);
+    }
+    public String getCurrentFilteredRssi(){
+        return this.rssiKalman.get(this.tick - 1);
+    }
+    public String getCurrentDistance(){
+        return this.distance.get(this.tick - 1);
+    }
+
 }

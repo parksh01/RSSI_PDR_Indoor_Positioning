@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Log Generator
     LogGenerator logGen;
-    int timeInterval;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -85,13 +84,10 @@ public class MainActivity extends AppCompatActivity {
         bluetoothAdapter = bluetoothManager.getAdapter();
         bleCheck(bluetoothAdapter);
 
+        // ListView for discovered BT device list.
         listView = findViewById(R.id.BTlist);
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
-
-        // Log Generator
-        logGen = new LogGenerator(3);
-        timeInterval = 200;
 
         // storing values related to beacon coordinates.
         Beacon01coordinates = findViewById(R.id.Beacon1Coordinate);
@@ -114,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
 
         // read values from config file.
         beaconList = Beacon.readConfig("BeaconConfig.csv");
+
+        // Log Generator
+        logGen = new LogGenerator(beaconList.size(), 200);
     }
 
     @Override
@@ -152,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    boolean isBack = false;
+                    // check if new input signal is from devices which are listed.
                     boolean newSignal = false;
                     int currentBeacon = -1;
                     for(int i=0;i<beaconList.size();i++){
@@ -162,9 +161,10 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         }
                     }
+
+                    // then if new signal is from device which is desired, do something.
                     if (newSignal) {
-                        // get beacon number from MAC address
-                        String beaconNumber = "Unknown";
+                        // get beacon number
                         int beaconOrder = currentBeacon + 1;
 
                         // Update beacon list.
@@ -179,19 +179,25 @@ public class MainActivity extends AppCompatActivity {
 
                         // if there is new beacon discovered, add it to the device list.
                         if (beaconIndex == -1) {
+                            // get values of discovered beacon from config file. (n/A)
                             float RSSItoDist_A_value = Float.parseFloat(beaconList.get(currentBeacon)[1]);
                             float RSSItoDist_n_value = Float.parseFloat(beaconList.get(currentBeacon)[2]);
                             float RSSItoDist_A_value_back = Float.parseFloat(beaconList.get(currentBeacon)[3]);
                             float RSSItoDist_n_value_back = Float.parseFloat(beaconList.get(currentBeacon)[4]);
+                            boolean isBack = false;
                             if(beaconList.get(currentBeacon)[5].equals("1")){
                                 isBack = false;
                             } else if (beaconList.get(currentBeacon)[5].equals("0")) {
                                 isBack = true;
                             }
+
+                            // if there is no permission, ask it.
                             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                                 Toast.makeText(getApplicationContext(), "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
                                 return;
                             }
+
+                            // add to beacon list and start logging rssi-related data.
                             adapter.beacon.add(new Beacon(device.getAddress(), RSSItoDist_A_value, RSSItoDist_n_value, RSSItoDist_A_value_back, RSSItoDist_n_value_back, beaconOrder, !isBack));
                             adapter.beacon.get(adapter.beacon.size()-1).setRssi(rssi);
 
@@ -210,17 +216,18 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @RequiresApi(api = Build.VERSION_CODES.O)
+    // start scanning.
     public void onScanClicked(View view) {
         Toast.makeText(this, "Scan Start", Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "'근처 기기'를 허용해주세요", Toast.LENGTH_SHORT).show();
-
             return;
         }
         bluetoothAdapter.startLeScan(leScanCallback);
-        logGen.startLogging(adapter, timeInterval);
+        logGen.startLogging(adapter);
     }
 
+    // stop scanning.
     public void onStopClicked(View view) {
         Toast.makeText(this, "Scan Stop", Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
@@ -233,13 +240,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
+    // generate log file
     public void onLogClicked(View view) {
-        // Generate Log File
         logGen.generateBeaconLog(adapter);
         logGen.generateDistanceLog(adapter);
         Toast.makeText(this, "Log Generated", Toast.LENGTH_SHORT).show();
     }
 
+    // clear beacon list.
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void onClearClicked(View view) {
         adapter.clear();

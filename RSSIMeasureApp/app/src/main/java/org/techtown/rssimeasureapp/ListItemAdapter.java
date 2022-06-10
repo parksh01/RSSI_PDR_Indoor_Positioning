@@ -46,11 +46,11 @@ public class ListItemAdapter extends BaseAdapter {
 
         deviceText.setText("Beacon #" + Integer.toString(this.beacon.get(position).beaconNumber));
         addressText.setText(this.beacon.get(position).MACaddress);
-        rssiText.setText(this.beacon.get(position).rssi.get(this.beacon.get(position).tick - 1) +
+        rssiText.setText(this.beacon.get(position).getCurrentRssi() +
                 " / kf : " +
-                this.beacon.get(position).rssiKalman.get(this.beacon.get(position).tick - 1) +
+                this.beacon.get(position).getCurrentFilteredRssi() +
                 " / d : " +
-                this.beacon.get(position).distance.get(this.beacon.get(position).tick - 1) +
+                this.beacon.get(position).getCurrentDistance() +
                 " tick : " +
                 Integer.toString(this.beacon.get(position).tick));
 
