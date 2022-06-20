@@ -12,29 +12,53 @@ rssi_y_kf = []
 rssi_avg_raw = []
 rssi_avg_kf = []
 
-front_or_back = input("front or back? : ")
+front_or_back = input("front or back? (F/B) : ")
 meters = int(input("meters? : "))
 kf_or_raw = input("kf or raw? : ")
+beaconNum = input("beacon number? : ")
 
-filename = 'inputdata2/'
+filename = 'inputdata3/Beacon 0' + beaconNum
 
 # read files and get rssi values
 for i in range(7):
-    with open(filename + str(i + 1) + ' ' + front_or_back + '.csv', 'r') as f:
-        print('Processing : ' + filename + str(i + 1) + 'm ' + front_or_back + '.csv')
+    with open(filename + '/B' + beaconNum + ' ' + str(i + 1) + front_or_back + '.csv', 'r') as f:
         line = None
         avg = 0
         tick = 0
         rssiCurrentValuesRaw = []
         rssiCurrentValuesKF = []
         j = 0
+        recentRaw = []
+        recentKF = []
+        currentAvgRaw = 0.0
+        currentAvgKF = 0.0
+        bias = 4.0
         while True:
             line = f.readline().strip()
-            if line == '':
+            if line == '' or line == 'avg(rssi),avg(rssiKalman),avg(distance)':
                 break
-            rssiCurrentValuesRaw.append(float(line.split(',')[0]))
-            rssiCurrentValuesKF.append(float(line.split(',')[1]))
-            tick += 1
+            if line.split(',')[0].lstrip('-').lstrip('.').isdigit():
+                if currentAvgRaw == 0.0 or currentAvgKF == 0.0:
+                    currentAvgRaw = float(line.split(',')[0])
+                    currentAvgKF = float(line.split(',')[1])
+                else:
+                    currentAvgRaw = np.average(recentRaw)
+                    currentAvgKF = np.average(recentKF)
+
+                if currentAvgRaw - bias <= float(line.split(',')[0]) <= currentAvgRaw + bias:
+                    rssiCurrentValuesRaw.append(float(line.split(',')[0]))
+                if currentAvgKF - bias <= float(line.split(',')[1]) <= currentAvgKF + bias:
+                    rssiCurrentValuesKF.append(float(line.split(',')[1]))
+
+                recentRaw.append(float(line.split(',')[0]))
+                recentKF.append(float(line.split(',')[1]))
+                if len(recentRaw) > 3 and len(recentKF) > 5:
+                    del recentRaw[0]
+                    del recentKF[0]
+                print(recentRaw, np.average(recentRaw))
+                print(recentKF, np.average(recentKF))
+
+                tick += 1
         rssi_y_raw.append(rssiCurrentValuesRaw)
         rssi_y_kf.append(rssiCurrentValuesKF)
         rssi_avg_raw.append(round(np.average(rssiCurrentValuesRaw), 3))
