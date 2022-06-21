@@ -125,8 +125,8 @@ elif type == '2':
             r2 = r2 / tick
             r3 = r3 / tick
 
-            x1 = 4.0
-            y2 = 4.0
+            x1 = 5.0
+            y2 = 5.0
 
             # Beacon 01 and Beacon 02
             x.append((r2**2 - r1**2 - x1**2)/(-2*x1))
@@ -135,31 +135,16 @@ elif type == '2':
             # Beacon 01 and Beacon 03
             y.append((r3**2 - r1**2 - y2**2)/(-2*y2))
             x.append(sqrt(abs(r1**2-y[1]**2)))
+            
+            # Beacon 02 and Beacon 03
+            y.append( abs(y2 - sqrt(abs(r3**2 - ((r2**2 - r1**2 - x1**2)/(-2*x1))**2))) )
+            x.append( abs(x1 - sqrt(abs(r2**2 - ((r3**2 - r1**2 - y2**2)/(-2*y2))**2))) )
 
-            print('=== aspect coordinate : (' + str(i + 1) + ', ' + str(j + 1) + ') ===')
 
-            """
-            print(x)
-            print(y)
-            """
-
-            x_avg = np.average(x)
-            y_avg = np.average(y)
-
-            print('coord : (' + str(x_avg) + ', ' + str(y_avg) + ')')
-            print('error : (' + str(abs((i + 1) - x_avg)) + ',' + str(abs((j + 1) - y_avg)) + ')')
-            x_error_avg.append(abs((i + 1) - x_avg))
-            y_error_avg.append(abs((j + 1) - y_avg))
-
-            aspectDist = [sqrt((i + 1) ** 2 + (j + 1) ** 2), sqrt((i + 1 - x1) ** 2 + (j + 1) ** 2), sqrt((i + 1) ** 2 + (j + 1 - y2) ** 2)]
-            measuredDist = [r1, r2, r3]
-            errorDist = []
-            for n in range(3):
-                errorDist.append(abs(aspectDist[n] - measuredDist[n]))
-
-            print('aspect distance : ', aspectDist)
-            print('measured distance : ', measuredDist)
-            print('error : ', errorDist)
+            print('(' + str(i + 1) + ', ' + str(j + 1) + ') : (' + str(round(np.average(x), 3)) + ', ' + str(round(np.average(y), 3)) + ') / error : (' + str(round(abs((i + 1) - np.average(x)), 3)) + ',' + str(round(abs((j + 1) - np.average(y)), 3)) + ')')
+            
+            x_error_avg.append(abs((i + 1) - np.average(x)))
+            y_error_avg.append(abs((j + 1) - np.average(y)))
 
             f.close()
 
