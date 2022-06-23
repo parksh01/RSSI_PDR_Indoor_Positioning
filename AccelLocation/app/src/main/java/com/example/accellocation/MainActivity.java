@@ -9,6 +9,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         coordinateDisplay = (TextView)findViewById(R.id.coordinateDisplay);
 
         manager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelLocation = new AccelLocation(coordinateDisplay);
+        accelLocation = new AccelLocation(coordinateDisplay, manager, accelLocation, this.getApplicationContext());
 
         buttonSwitchToggle = false;
     }
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         buttonSwitchToggle = !buttonSwitchToggle;
         if(buttonSwitchToggle){
             Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-            boolean accelCheck = manager.registerListener(accelLocation, sensor, SensorManager.SENSOR_DELAY_UI);
+            boolean accelCheck = manager.registerListener(accelLocation, sensor, SensorManager.SENSOR_DELAY_FASTEST);
             if(!accelCheck){
                 Toast.makeText(this.getApplicationContext(), "가속도 센서를 지원하지 않음", Toast.LENGTH_LONG).show();
             }
