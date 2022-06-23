@@ -48,12 +48,8 @@ public class AccelLocation implements SensorEventListener{
             velY += accY * Math.abs(after - before) / 1000;
             velZ += accZ * Math.abs(after - before) / 1000;
 
-            dispX += velX * Math.abs(after - before) / 1000;
-            dispY += velY * Math.abs(after - before) / 1000;
-            dispZ += velZ * Math.abs(after - before) / 1000;
             this.view.setText("acc : (" + String.format("%.3f", accX) + ", " + String.format("%.3f", accY) + ", " + String.format("%.3f", accZ) + ")\n" +
-                "vel : (" + String.format("%.3f", velX) + ", " + String.format("%.3f", velY) + ", " + String.format("%.3f", velZ) + ")\n" +
-                "disp : (" + String.format("%.3f", dispX) + ", " + String.format("%.3f", dispY) + ", " + String.format("%.3f", dispZ) + ")\n");
+                "vel : (" + String.format("%.3f", velX) + ", " + String.format("%.3f", velY) + ", " + String.format("%.3f", velZ) + ")");
         }
     }
 
