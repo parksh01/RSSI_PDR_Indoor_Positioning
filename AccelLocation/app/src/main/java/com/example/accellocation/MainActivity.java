@@ -41,13 +41,15 @@ public class MainActivity extends AppCompatActivity {
         buttonSwitchToggle = !buttonSwitchToggle;
         if(buttonSwitchToggle){
             Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-            boolean accelCheck = manager.registerListener(accelLocation, sensor, SensorManager.SENSOR_DELAY_UI);
+            // shorter interval makes smaller error.
+            boolean accelCheck = manager.registerListener(accelLocation, sensor, SensorManager.SENSOR_DELAY_FASTEST);
             if(!accelCheck){
                 Toast.makeText(this.getApplicationContext(), "가속도 센서를 지원하지 않음", Toast.LENGTH_LONG).show();
             }
         }
         else{
             manager.unregisterListener(accelLocation);
+            accelLocation.clear();
         }
     }
 }
