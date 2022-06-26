@@ -47,4 +47,7 @@ public class KalmanFilter {
         this.predictedRSSI = this.priorRSSI + (this.kalmanGain * ((double)val - this.priorRSSI));
         return this.predictedRSSI;
     }
+    public double filter(double val){
+        return filtering(val);
+    }
 }

@@ -9,53 +9,56 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import uk.me.berndporr.iirj.Butterworth;
-
 
 public class AccelLocation implements SensorEventListener{
     TextView view;
     Context context;
     SensorManager manager;
-    AccelLocation accelLocation;
     int tick;
     public float accX, accY, accZ, prevAccX, prevAccY, prevAccZ;
     public float velX, velY, velZ, prevVelX, prevVelY, prevVelZ;
     public float dispX, dispY, dispZ;
-    private float alpha = 0.8f;
 
-    private long before, after;
+    private long before;
     final private int tickThresh = 300;
     private float interval;
-    Butterworth butterworth;
     ArrayList<KalmanFilter> kf;
 
-    AccelLocation(TextView view, SensorManager manager, AccelLocation accelLocation, Context context){
+    final private int sensorType = Sensor.TYPE_LINEAR_ACCELERATION;
+    private ArrayList<Float> recentVal;
+
+    AccelLocation(TextView view, SensorManager manager, Context context){
         this.view = view;
         this.context = context;
         this.manager = manager;
-        this.accelLocation = accelLocation;
         this.tick = 0;
-        this.butterworth = new Butterworth();
-        butterworth.highPass(4, 500, 200);
-        Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        this.recentVal = new ArrayList<Float>();
+
+        Sensor sensor = manager.getDefaultSensor(sensorType);
         kf = new ArrayList<KalmanFilter>();
         for(int i=0;i<3;i++){
-            kf.add(new KalmanFilter(0.1, 0.15));
+            kf.add(new KalmanFilter(1, 10));
         }
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){
-            interval = (float)Math.abs(before - System.nanoTime()) / 1000000000;
+        if(sensorEvent.sensor.getType() == sensorType){
+            interval = (float) Math.abs(before - System.nanoTime()) / 1000000000;
             before = System.nanoTime();
             prevAccX = accX;
             prevAccY = accY;
             prevAccZ = accZ;
-            accX = (float) kf.get(0).filtering(sensorEvent.values[0]);
-            accY = (float) kf.get(1).filtering(sensorEvent.values[1]);
-            accZ = (float) kf.get(2).filtering(sensorEvent.values[2]);
-
+            accX = /*(float) kf.get(0).filter(*/sensorEvent.values[0];
+            accY = /*(float) kf.get(1).filter(*/sensorEvent.values[1];
+            accZ = /*(float) kf.get(2).filter(*/sensorEvent.values[2];
+            if(recentVal.size() < 20){
+                recentVal.add(accZ);
+            }
+            else{
+                recentVal.remove(0);
+                recentVal.add(accZ);
+            }
             this.tick++;
 
             if(tick < tickThresh){
@@ -65,9 +68,13 @@ public class AccelLocation implements SensorEventListener{
                 prevVelX = velX;
                 prevVelY = velY;
                 prevVelZ = velZ;
-                velX += (prevAccX + accX) * interval / 2;
-                velY += (prevAccY + accY) * interval / 2;
-                velZ += (prevAccZ + accZ) * interval / 2;
+                velX = velX + (prevAccX + accX) * interval / 2;
+                velY = velY + (prevAccY + accY) * interval / 2;
+                velZ = velZ + (prevAccZ + accZ) * interval / 2;
+                // While not moving
+                if(Statistics.stdev(recentVal) < 0.01){
+                    velX = 0; velY = 0; velZ = 0;
+                }
 
                 dispX += (prevVelX + velX) * interval / 2;
                 dispY += (prevVelY + velY) * interval / 2;

@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         coordinateDisplay = (TextView)findViewById(R.id.coordinateDisplay);
 
         manager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelLocation = new AccelLocation(coordinateDisplay, manager, accelLocation, this.getApplicationContext());
+        accelLocation = new AccelLocation(coordinateDisplay, manager, this.getApplicationContext());
 
         buttonSwitchToggle = false;
 
