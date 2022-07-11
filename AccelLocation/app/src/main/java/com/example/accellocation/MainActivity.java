@@ -16,9 +16,11 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
     Button startButton;
     TextView coordinateDisplay;
+    TextView directionDisplay;
 
-    SensorManager manager;
+    SensorManager AccelManager, RotManager;
     AccelLocation accelLocation;
+    DeviceDirection deviceDirection;
 
     boolean buttonSwitchToggle;
 
@@ -29,9 +31,12 @@ public class MainActivity extends AppCompatActivity {
 
         startButton = (Button)findViewById(R.id.button);
         coordinateDisplay = (TextView)findViewById(R.id.coordinateDisplay);
+        directionDisplay = (TextView)findViewById(R.id.directionDisplay);
 
-        manager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelLocation = new AccelLocation(coordinateDisplay, manager, this.getApplicationContext());
+        AccelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        RotManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        accelLocation = new AccelLocation(coordinateDisplay, AccelManager, this.getApplicationContext());
+        deviceDirection = new DeviceDirection(directionDisplay, RotManager, this.getApplicationContext());
 
         buttonSwitchToggle = false;
 
@@ -40,16 +45,20 @@ public class MainActivity extends AppCompatActivity {
     public void onStartButtonClick(View view) {
         buttonSwitchToggle = !buttonSwitchToggle;
         if(buttonSwitchToggle){
-            Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+            Sensor AccelSensor = AccelManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+            Sensor RotationVectorSensor = RotManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             // shorter interval makes smaller error.
-            boolean accelCheck = manager.registerListener(accelLocation, sensor, SensorManager.SENSOR_DELAY_FASTEST);
-            if(!accelCheck){
+            boolean accelCheck = AccelManager.registerListener(accelLocation, AccelSensor, SensorManager.SENSOR_DELAY_GAME);
+            boolean directionCheck = RotManager.registerListener(deviceDirection, RotationVectorSensor, SensorManager.SENSOR_DELAY_GAME);
+            if(!accelCheck | !directionCheck){
                 Toast.makeText(this.getApplicationContext(), "가속도 센서를 지원하지 않음", Toast.LENGTH_LONG).show();
             }
         }
         else{
-            manager.unregisterListener(accelLocation);
+            AccelManager.unregisterListener(accelLocation);
+            RotManager.unregisterListener(deviceDirection);
             accelLocation.clear();
+            deviceDirection.clear();
         }
     }
 }
