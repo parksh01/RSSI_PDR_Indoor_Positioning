@@ -24,6 +24,8 @@ public class DeviceDirection implements SensorEventListener {
     private float interval;
     private long before;
 
+    final private int tickThresh = 300;
+
     DeviceDirection(TextView view, SensorManager manager, Context context){
         this.view = view;
         this.context = context;
@@ -43,16 +45,21 @@ public class DeviceDirection implements SensorEventListener {
         velz = sensorEvent.values[2];
         this.tick++;
 
-        prevRotx = rotx;
-        prevRoty = roty;
-        prevRotz = rotz;
-        rotx = rotx + (prevVelx + velx) * interval / 2;
-        roty = roty + (prevVely + vely) * interval / 2;
-        rotz = rotz + (prevVelz + velz) * interval / 2;
+        if(tick < tickThresh){
+            this.view.setText("tick : " + this.tick);
+        }
+        else {
+            prevRotx = rotx;
+            prevRoty = roty;
+            prevRotz = rotz;
+            rotx = rotx + (prevVelx + velx) * interval / 2;
+            roty = roty + (prevVely + vely) * interval / 2;
+            rotz = rotz + (prevVelz + velz) * interval / 2;
 
-        this.view.setText("x : " + String.format("%.3f", rotx/3.14159) + "pi" + '\n' +
-                "y : " + String.format("%.3f", roty/3.14159) + "pi" + '\n' +
-                "z : " + String.format("%.3f", rotz/3.14159) + "pi" + '\n');
+            this.view.setText("x : " + String.format("%.3f", rotx / 3.14159) + "pi" + '\n' +
+                    "y : " + String.format("%.3f", roty / 3.14159) + "pi" + '\n' +
+                    "z : " + String.format("%.3f", rotz / 3.14159) + "pi" + '\n');
+        }
     }
 
     @Override
@@ -61,5 +68,17 @@ public class DeviceDirection implements SensorEventListener {
     }
     public void clear(){
         this.tick = 0;
+        this.rotx = 0;
+        this.roty = 0;
+        this.rotz = 0;
+        this.prevRotx = 0;
+        this.prevRoty = 0;
+        this.prevRotz = 0;
+        this.velx = 0;
+        this.vely = 0;
+        this.velz = 0;
+        this.prevVelx = 0;
+        this.prevVely = 0;
+        this.prevVelz = 0;
     }
 }
