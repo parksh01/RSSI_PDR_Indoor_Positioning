@@ -15,8 +15,8 @@ public class AccelLocation implements SensorEventListener{
     Context context;
     SensorManager manager;
     int tick;
-    public float accX, accY, accZ, prevAccX, prevAccY, prevAccZ;
-    public float velX, velY, velZ, prevVelX, prevVelY, prevVelZ;
+    public float accX, accY, accZ, prevAccX, prevAccY, prevAccZ, accel, prevAccel;
+    public float velX, velY, velZ, prevVelX, prevVelY, prevVelZ, spd, prevSpd;
     public float dispX, dispY, dispZ;
 
     private long before;
@@ -49,12 +49,16 @@ public class AccelLocation implements SensorEventListener{
             before = System.nanoTime();
             prevAccX = accX;
             prevAccY = accY;
-            accX = /*(float) kf.get(0).filter(*/sensorEvent.values[0];
-            accY = /*(float) kf.get(1).filter(*/sensorEvent.values[1];
+            prevAccZ = accZ;
+            prevAccel = accel;
+            accX = sensorEvent.values[0];
+            accY = sensorEvent.values[1];
+            accZ = sensorEvent.values[2];
+            accel = (float) Math.sqrt(accX * accX + accY * accY + accZ * accZ);
             if(recentVal.size() > detectThresh) {
                 recentVal.remove(0);
             }
-            recentVal.add((float) Math.sqrt(accX*accX + accY*accY));
+            recentVal.add((float) Math.sqrt(accX*accX + accY*accY + accZ*accZ));
             this.tick++;
 
             if(tick < tickThresh){
@@ -63,18 +67,23 @@ public class AccelLocation implements SensorEventListener{
             else{
                 prevVelX = velX;
                 prevVelY = velY;
+                prevVelZ = velZ;
+                prevSpd = spd;
                 velX = velX + (prevAccX + accX) * interval / 2;
                 velY = velY + (prevAccY + accY) * interval / 2;
+                velZ = velZ + (prevAccZ + accZ) * interval / 2;
+                spd = spd + (prevAccel + accel) * interval / 2;
                 // While not moving
                 if(Statistics.stdev(recentVal) < 0.05){
-                    velX = 0; velY = 0;
+                    velX = 0; velY = 0; velZ = 0; spd = 0;
                 }
 
                 dispX += (prevVelX + velX) * interval / 2;
                 dispY += (prevVelY + velY) * interval / 2;
-                this.view.setText("acc : (" + String.format("%.3f", accX) + ", " + String.format("%.3f", accY) + ")\n" +
-                        "vel : (" + String.format("%.3f", velX) + ", " + String.format("%.3f", velY) + ")\n" +
-                        "disp : (" + String.format("%.3f", dispX) + ", " + String.format("%.3f", dispY) + ")");
+                dispZ += (prevVelZ + velZ) * interval / 2;
+                this.view.setText("acc : (" + String.format("%.3f", accX) + ", " + String.format("%.3f", accY) + ", " + String.format("%.3f", accZ) + ")\n" +
+                        "vel : (" + String.format("%.3f", velX) + ", " + String.format("%.3f", velY) + ", " + String.format("%.3f", velZ) + ")\n" +
+                        "disp : (" + String.format("%.3f", dispX) + ", " + String.format("%.3f", dispY) + ", " + String.format("%.3f", dispZ) + ")");
             }
         }
     }
@@ -85,9 +94,9 @@ public class AccelLocation implements SensorEventListener{
     }
 
     public void clear() {
-        accX = 0; accY = 0; prevAccX = 0; prevAccY = 0;
-        velX = 0; velY = 0; prevVelX = 0; prevVelY = 0;
-        dispX = 0; dispY = 0;
+        accX = 0; accY = 0; accZ = 0; prevAccX = 0; prevAccY = 0; prevAccZ = 0;
+        velX = 0; velY = 0; velZ = 0; prevVelX = 0; prevVelY = 0; prevVelZ = 0;
+        dispX = 0; dispY = 0; dispZ = 0;
         tick = 0;
     }
 }

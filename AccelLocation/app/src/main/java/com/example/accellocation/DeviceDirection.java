@@ -14,7 +14,6 @@ public class DeviceDirection implements SensorEventListener {
     Context context;
     SensorManager manager;
     int tick;
-    final private int sensorType = Sensor.TYPE_GYROSCOPE;
     private ArrayList<Float> recentVal;
 
     public float velx, vely, velz;
@@ -24,6 +23,8 @@ public class DeviceDirection implements SensorEventListener {
     private float interval;
     private long before;
 
+    public float deltaRot, prevDeltaRot, totalRot;
+
     final private int tickThresh = 300;
 
     DeviceDirection(TextView view, SensorManager manager, Context context){
@@ -32,6 +33,7 @@ public class DeviceDirection implements SensorEventListener {
         this.manager = manager;
         this.tick = 0;
         this.recentVal = new ArrayList<Float>();
+        this.totalRot = 0;
     }
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -40,9 +42,14 @@ public class DeviceDirection implements SensorEventListener {
         prevVelx = velx;
         prevVely = vely;
         prevVelz = velz;
+        prevDeltaRot = deltaRot;
         velx = sensorEvent.values[0];
         vely = sensorEvent.values[1];
         velz = sensorEvent.values[2];
+        deltaRot = (float) Math.sqrt(vely*vely + velz*velz);
+        if(((Math.abs(vely) > Math.abs(velz)) && (vely < 0)) || ((Math.abs(vely) < Math.abs(velz)) && (velz < 0))){
+            deltaRot *= (-1);
+        }
         this.tick++;
 
         if(tick < tickThresh){
@@ -55,10 +62,15 @@ public class DeviceDirection implements SensorEventListener {
             rotx = rotx + (prevVelx + velx) * interval / 2;
             roty = roty + (prevVely + vely) * interval / 2;
             rotz = rotz + (prevVelz + velz) * interval / 2;
+            totalRot = totalRot + (prevDeltaRot + deltaRot) * interval / 2;
 
-            this.view.setText("x : " + String.format("%.3f", rotx / 3.14159) + "pi" + '\n' +
-                    "y : " + String.format("%.3f", roty / 3.14159) + "pi" + '\n' +
-                    "z : " + String.format("%.3f", rotz / 3.14159) + "pi" + '\n');
+            this.view.setText("rotx : " + String.format("%.3f", rotx / 3.14159) + "pi / " +
+                    "roty : " + String.format("%.3f", roty / 3.14159) + "pi / " +
+                    "rotz : " + String.format("%.3f", rotz / 3.14159) + "pi" + '\n' +
+                    "velx : " + String.format("%.3f", velx / 3.14159) + "pi / " +
+                    "vely : " + String.format("%.3f", vely / 3.14159) + "pi / " +
+                    "velz : " + String.format("%.3f", velz / 3.14159) + "pi " + '\n' +
+                    "rot : " + String.format("%.3f", totalRot / 3.14159) + "pi ");
         }
     }
 
