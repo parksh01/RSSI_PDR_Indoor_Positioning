@@ -1,11 +1,13 @@
 package com.example.accellocation;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     SensorManager AccelManager, RotManager;
     AccelLocation accelLocation;
     DeviceDirection deviceDirection;
+
+    SensorLogWriter sensorLogWriter;
 
     boolean buttonSwitchToggle;
 
@@ -55,12 +59,15 @@ public class MainActivity extends AppCompatActivity {
         accelLocation = new AccelLocation(coordinateDisplay, AccelManager, this.getApplicationContext());
         deviceDirection = new DeviceDirection(directionDisplay, RotManager, this.getApplicationContext());
 
+        sensorLogWriter = new SensorLogWriter();
+
         buttonSwitchToggle = false;
 
     }
 
     public void onStartButtonClick(View view) {
         buttonSwitchToggle = !buttonSwitchToggle;
+        Timer scheduler = new Timer();
         if(buttonSwitchToggle){
             Sensor AccelSensor = AccelManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
             Sensor RotationVectorSensor = RotManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -71,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this.getApplicationContext(), "가속도 센서를 지원하지 않음", Toast.LENGTH_LONG).show();
             }
             else{
-                Timer scheduler = new Timer();
                 TimerTask task = new TimerTask(){
                     @Override
                     public void run() {
@@ -81,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
                         coordY += Math.cos(deviceDirection.totalRot) * accelLocation.spd * interval;
                         Message msg = coordType2Handler.obtainMessage();
                         coordType2Handler.sendMessage(msg);
+                        if((deviceDirection.tick > deviceDirection.tickThresh) && (accelLocation.tick > accelLocation.tickThresh)){
+                            sensorLogWriter.addValue(accelLocation.accX, accelLocation.accY, accelLocation.accZ, deviceDirection.velx, deviceDirection.vely, deviceDirection.velz);
+                        }
                     }
                 };
                 scheduler.scheduleAtFixedRate(task, 0, 10);
@@ -91,6 +100,32 @@ public class MainActivity extends AppCompatActivity {
             RotManager.unregisterListener(deviceDirection);
             accelLocation.clear();
             deviceDirection.clear();
+            scheduler.cancel();
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void onLogButtonClick(View view) {
+        sensorLogWriter.generate(getApplicationContext());
+    }
+
+    public void onStopClick(View view) {
+        sensorLogWriter.currentTag = "stop";
+    }
+    public void onStopLeftClick(View view) {
+        sensorLogWriter.currentTag = "stopLeft";
+    }
+    public void onStopRightClick(View view) {
+        sensorLogWriter.currentTag = "stopRight";
+    }
+
+    public void onMoveClick(View view) {
+        sensorLogWriter.currentTag = "move";
+    }
+    public void onMoveLeftClick(View view) {
+        sensorLogWriter.currentTag = "moveLeft";
+    }
+    public void onMoveRightClick(View view) {
+        sensorLogWriter.currentTag = "moveRight";
     }
 }

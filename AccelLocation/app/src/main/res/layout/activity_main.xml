@@ -7,24 +7,27 @@
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/coordinateDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"
         android:textSize="24dp"
-        android:id="@+id/coordinateDisplay"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.15" />
 
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="16sp"
         android:onClick="onStartButtonClick"
-        android:text="Button"
+        android:text="Run"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/moveLeftButton"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -34,8 +37,10 @@
         android:text="TextView"
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/coordinateDisplay" />
+        app:layout_constraintTop_toBottomOf="@+id/coordinateDisplay"
+        app:layout_constraintVertical_bias="0.276" />
 
     <TextView
         android:id="@+id/coordinateType2Display"
@@ -43,9 +48,86 @@
         android:layout_height="wrap_content"
         android:text="TextView"
         android:textSize="24dp"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintBottom_toTopOf="@+id/stopLeftButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/directionDisplay" />
+
+    <Button
+        android:id="@+id/moveLeftButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="이동좌"
+        android:onClick="onMoveLeftClick"
+        android:layout_margin="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/moveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16sp"
+        android:text="이동"
+        android:onClick="onMoveClick"
+        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintEnd_toStartOf="@+id/moveLeftButton"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/moveRightButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16sp"
+        android:text="이동우"
+        android:onClick="onMoveRightClick"
+        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/moveLeftButton" />
+
+    <Button
+        android:id="@+id/stopLeftButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16sp"
+        android:text="정지좌"
+        android:onClick="onStopLeftClick"
+        app:layout_constraintBottom_toTopOf="@+id/moveLeftButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16sp"
+        android:text="정지"
+        android:onClick="onStopClick"
+        app:layout_constraintBottom_toTopOf="@+id/moveButton"
+        app:layout_constraintEnd_toStartOf="@+id/stopLeftButton"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/stopRightButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16sp"
+        android:text="정지우"
+        android:onClick="onStopRightClick"
+        app:layout_constraintBottom_toTopOf="@+id/moveRightButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/stopLeftButton" />
+
+    <Button
+        android:id="@+id/logButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16sp"
+        android:text="Log"
+        android:onClick="onLogButtonClick"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/moveLeftButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

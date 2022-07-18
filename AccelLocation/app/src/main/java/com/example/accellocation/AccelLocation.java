@@ -8,19 +8,20 @@ import android.hardware.SensorManager;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class AccelLocation implements SensorEventListener{
     TextView view;
     Context context;
     SensorManager manager;
-    int tick;
+    public int tick;
     public float accX, accY, accZ, prevAccX, prevAccY, prevAccZ, accel, prevAccel;
     public float velX, velY, velZ, prevVelX, prevVelY, prevVelZ, spd, prevSpd;
     public float dispX, dispY, dispZ;
 
     private long before;
-    final private int tickThresh = 300;
+    final public int tickThresh = 300;
     final private int detectThresh = 10;
     private float interval;
     ArrayList<KalmanFilter> kf;
@@ -54,6 +55,7 @@ public class AccelLocation implements SensorEventListener{
             accX = sensorEvent.values[0];
             accY = sensorEvent.values[1];
             accZ = sensorEvent.values[2];
+
             accel = (float) Math.sqrt(accX * accX + accY * accY + accZ * accZ);
             if(recentVal.size() > detectThresh) {
                 recentVal.remove(0);

@@ -13,7 +13,7 @@ public class DeviceDirection implements SensorEventListener {
     TextView view;
     Context context;
     SensorManager manager;
-    int tick;
+    public int tick;
     private ArrayList<Float> recentVal;
 
     public float velx, vely, velz;
@@ -25,7 +25,7 @@ public class DeviceDirection implements SensorEventListener {
 
     public float deltaRot, prevDeltaRot, totalRot;
 
-    final private int tickThresh = 300;
+    final public int tickThresh = 300;
 
     DeviceDirection(TextView view, SensorManager manager, Context context){
         this.view = view;
