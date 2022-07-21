@@ -1,6 +1,7 @@
 import csv
 import numpy as np
 
+# takes array of labels as input, and generates dictionary for converting into integer, or vice versa.
 def label(labels):
     label2num = {}
     num2label = {}
@@ -38,6 +39,7 @@ def load_testcases(path, sliceSize, label2num):
         slicedLabel.append(y_test[i + int(sliceSize/2)])
     return np.array(slicedData).reshape(-1, sliceSize, num_classes), np.array(slicedLabel).reshape(-1, num_classes)
 
+# Do one hot encoding with given category number.
 def oneHotEncode(whichCategory, howMany):
     encoded = []
     for i in range(howMany):
@@ -47,6 +49,7 @@ def oneHotEncode(whichCategory, howMany):
             encoded.append(0)
     return encoded
 
+# read csv file and returns array.
 def read_csv(path):
     f = open(path, 'r')
     print("Now reading : " + path)
