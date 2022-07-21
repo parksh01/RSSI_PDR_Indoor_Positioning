@@ -4,7 +4,7 @@ import numpy as np
 
 label2num, num2label = label(["stop", "stopLeft", "stopRight", "move", "moveLeft", "moveRight"])
 
-(X_test, y_test) = load_testcases('TestCase/Sensor Data - 2022-07-21-10시 54분 58초.csv', 100, label2num)
+(X_test, y_test) = load_testcases('TestCase/testcase.csv', 100, label2num)
 print(len(X_test))
 print(len(y_test))
 
@@ -23,5 +23,5 @@ for i in range(len(y_prediction)):
     else:
         valid = 'false'
         falsecount = falsecount + 1
-    print("prediction : " + str(num2label[pred]) + " / value : " + str(num2label[val]) + " / " + valid)
+    print("prediction : " + str(num2label[pred]) + " / value : " + str(num2label[val]) + " - " + valid)
 print('acc : ' + str(truecount / (truecount + falsecount)))

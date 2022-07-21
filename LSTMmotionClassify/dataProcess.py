@@ -35,7 +35,7 @@ def load_testcases(path, sliceSize, label2num):
     slicedData = sliceData(X_test, sliceSize)
     slicedLabel = []
     for i in range(0, linecount - sliceSize):
-        slicedLabel.append(y_test[i + (sliceSize - 1)])
+        slicedLabel.append(y_test[i + int(sliceSize/2)])
     return np.array(slicedData).reshape(-1, sliceSize, num_classes), np.array(slicedLabel).reshape(-1, num_classes)
 
 def oneHotEncode(whichCategory, howMany):

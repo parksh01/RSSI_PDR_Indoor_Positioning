@@ -6,13 +6,27 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import numpy as np
 
 # Training Datasets
-path = ["TrainingData/stop/stop.csv",
-        "TrainingData/stopLeft/stopLeft.csv",
-        "TrainingData/stopRight/stopRight.csv",
+path = ["TrainingData/stop/stop1.csv",
+        "TrainingData/stop/stop2.csv",
+        "TrainingData/stop/stop3.csv",
+        "TrainingData/stop/stop4.csv",
+        "TrainingData/stopLeft/stopLeft1.csv",
+        "TrainingData/stopLeft/stopLeft2.csv",
+        "TrainingData/stopLeft/stopLeft3.csv",
+        "TrainingData/stopRight/stopRight1.csv",
+        "TrainingData/stopRight/stopRight2.csv",
+        "TrainingData/stopRight/stopRight3.csv",
         "TrainingData/move/move1.csv",
         "TrainingData/move/move2.csv",
-        "TrainingData/moveLeft/moveLeft.csv",
-        "TrainingData/moveRight/moveRight.csv"]
+        "TrainingData/move/move3.csv",
+        "TrainingData/move/move4.csv",
+        "TrainingData/move/move5.csv",
+        "TrainingData/moveLeft/moveLeft1.csv",
+        "TrainingData/moveLeft/moveLeft2.csv",
+        "TrainingData/moveRight/moveRight1.csv",
+        "TrainingData/moveRight/moveRight2.csv",
+        "TrainingData/moveRight/moveRight3.csv",
+        "TrainingData/moveRight/moveRight4.csv"]
 
 # Category
 # 0 - stop
@@ -21,7 +35,7 @@ path = ["TrainingData/stop/stop.csv",
 # 3 - move
 # 4 - moveLeft
 # 5 - moveRight
-category = [0, 1, 2, 3, 3, 4, 5]
+category = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 5, 5, 5, 5]
 
 # loading training dataset
 slice = 100
