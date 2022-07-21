@@ -1,5 +1,42 @@
 import csv
-import tensorflow as tf
+import numpy as np
+
+def label(labels):
+    label2num = {}
+    num2label = {}
+    n = 0
+    for i in labels:
+        label2num[i] = n
+        num2label[n] = i
+        n = n + 1
+    return label2num, num2label
+
+def load_testcases(path, sliceSize, label2num):
+    # First, read file and store in array
+    num_classes = len(label2num)
+    f = open(path, 'r')
+    print("Now reading : " + path)
+    X_test = []
+    y_test = []
+    rdr = csv.reader(f)
+    linecount = 0
+    for line in rdr:
+        if linecount == 0:
+            linecount = linecount + 1
+        else:
+            temp = []
+            for i in range(num_classes):
+                temp.append(float(line[i].strip()))
+            X_test.append(temp)
+            y_test.append(oneHotEncode(label2num[line[num_classes]], num_classes))
+            linecount = linecount + 1
+    f.close()
+    # then slice it.
+    slicedData = sliceData(X_test, sliceSize)
+    slicedLabel = []
+    for i in range(0, linecount - sliceSize):
+        slicedLabel.append(y_test[i + (sliceSize - 1)])
+    return np.array(slicedData).reshape(-1, sliceSize, num_classes), np.array(slicedLabel).reshape(-1, num_classes)
 
 def oneHotEncode(whichCategory, howMany):
     encoded = []
@@ -21,8 +58,8 @@ def read_csv(path):
             linecount = linecount + 1
         else:
             temp = []
-            for val in line:
-                temp.append(float(val.strip()))
+            for i in range(6):
+                temp.append(float(line[i].strip()))
             rows.append(temp)
             linecount = linecount + 1
     f.close()
