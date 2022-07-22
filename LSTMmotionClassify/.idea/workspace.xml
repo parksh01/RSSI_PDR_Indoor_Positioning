@@ -40,7 +40,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.train">
+  <component name="RunManager" selected="Python.test">
     <configuration name="GPUcheck" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="LSTMmotionClassify" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -155,8 +155,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.train" />
         <item itemvalue="Python.test" />
+        <item itemvalue="Python.train" />
         <item itemvalue="Python.h5toTFlite" />
         <item itemvalue="Python.train (1)" />
         <item itemvalue="Python.GPUcheck" />
