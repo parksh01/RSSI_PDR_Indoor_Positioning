@@ -40,7 +40,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.test">
+  <component name="RunManager" selected="Python.train">
     <configuration name="GPUcheck" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="LSTMmotionClassify" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -132,9 +132,9 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Users\tron0\AppData\Local\Microsoft\WindowsApps\python3.10.exe" />
+      <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
+      <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train.py" />
@@ -155,9 +155,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.train" />
         <item itemvalue="Python.test" />
         <item itemvalue="Python.h5toTFlite" />
-        <item itemvalue="Python.train" />
         <item itemvalue="Python.train (1)" />
         <item itemvalue="Python.GPUcheck" />
       </list>

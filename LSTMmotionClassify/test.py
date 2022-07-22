@@ -6,7 +6,8 @@ import numpy as np
 label2num, num2label = label(["stop", "stopLeft", "stopRight", "move", "moveLeft", "moveRight"])
 
 # Reads testcase csv file (slice size = 100)
-(X_test, y_test) = load_testcases('TestCase/Sensor Data - 2022-07-21-10시 54분 58초.csv', 100, label2num)
+sliceSize = 30
+(X_test, y_test) = load_testcases('TestCase/Sensor Data - 2022-07-21-10시 54분 58초.csv', sliceSize, label2num)
 print(len(X_test))
 print(len(y_test))
 
