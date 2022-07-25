@@ -48,9 +48,11 @@ public class MainActivity extends AppCompatActivity {
     float coordY = 0;
     float interval = 0;
     float before;
+
     Interpreter tflite;
     float[][][] input;
     float[][] output;
+    final int sliceSize= 30;
 
     final Handler coordType2Handler = new Handler(){
         public void handleMessage(Message msg){
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         buttonSwitchToggle = false;
 
         tflite = getTfliteInterpreter("converted_model.tflite");
-        input = new float[1][100][6];
+        input = new float[1][sliceSize][6];
         output = new float[1][6];
     }
 
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                         before = System.nanoTime();
                         coordX += Math.sin(deviceDirection.totalRot) * accelLocation.spd * interval;
                         coordY += Math.cos(deviceDirection.totalRot) * accelLocation.spd * interval;
-                        for(int i = 0;i<99;i++){
+                        for(int i = 0;i<sliceSize - 1;i++){
                             input[0][i][0] = input[0][i+1][0];
                             input[0][i][1] = input[0][i+1][1];
                             input[0][i][2] = input[0][i+1][2];
@@ -138,12 +140,12 @@ public class MainActivity extends AppCompatActivity {
                             input[0][i][4] = input[0][i+1][4];
                             input[0][i][5] = input[0][i+1][5];
                         }
-                        input[0][99][0] = accelLocation.accX;
-                        input[0][99][1] = accelLocation.accY;
-                        input[0][99][2] = accelLocation.accZ;
-                        input[0][99][3] = deviceDirection.velx;
-                        input[0][99][4] = deviceDirection.vely;
-                        input[0][99][5] = deviceDirection.velz;
+                        input[0][sliceSize - 1][0] = accelLocation.accX;
+                        input[0][sliceSize - 1][1] = accelLocation.accY;
+                        input[0][sliceSize - 1][2] = accelLocation.accZ;
+                        input[0][sliceSize - 1][3] = deviceDirection.velx;
+                        input[0][sliceSize - 1][4] = deviceDirection.vely;
+                        input[0][sliceSize - 1][5] = deviceDirection.velz;
 
                         Message msg = coordType2Handler.obtainMessage();
 
