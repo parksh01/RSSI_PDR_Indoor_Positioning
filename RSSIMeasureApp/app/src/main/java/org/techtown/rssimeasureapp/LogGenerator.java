@@ -2,13 +2,17 @@ package org.techtown.rssimeasureapp;
 
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Array;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,6 +24,7 @@ import java.util.TimerTask;
 
 public class LogGenerator {
     private ArrayList<ArrayList<String>> distanceData = new ArrayList<ArrayList<String>>();
+    public ArrayList<float[]> coordinateData = new ArrayList<float[]>();
     private ArrayList<Long> timeStamp = new ArrayList<Long>();
     Timer scheduler;
     LocalTime startTime;
@@ -127,8 +132,8 @@ public class LogGenerator {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void run() {
+                ArrayList<Float> currentDistance = new ArrayList<Float>();
                 for(int i=0;i<size;i++){
-                    String beaconName = "Beacon #" + (i + 1);
                     if(isExist(adapter, i+1)){
                         int beaconIndex = 0;
                         for(int j = 0;j < adapter.beacon.size();j++){
@@ -137,11 +142,14 @@ public class LogGenerator {
                             }
                         }
                         distanceData.get(i).add(adapter.beacon.get(beaconIndex).distance.get(adapter.beacon.get(beaconIndex).tick - 1));
+                        currentDistance.add(Float.parseFloat(adapter.beacon.get(beaconIndex).distance.get(adapter.beacon.get(beaconIndex).tick - 1)));
                     }
                     else{
                         distanceData.get(i).add("null");
                     }
                 }
+                float[] coordinate = Triangulation.CalculateCoordinate(currentDistance, adapter.beacon);
+                coordinateData.add(coordinate);
                 timeStamp.add(ChronoUnit.MILLIS.between(startTime, LocalTime.now()));
                 Log.v("test", "" + dataCollected + "/" + (ChronoUnit.MILLIS.between(startTime, LocalTime.now()) + "/" + distanceData.get(0).get(distanceData.get(0).size() - 1) + "/" + distanceData.get(1).get(distanceData.get(1).size() - 1) + "/" + distanceData.get(2).get(distanceData.get(2).size() - 1)));
                 dataCollected++;

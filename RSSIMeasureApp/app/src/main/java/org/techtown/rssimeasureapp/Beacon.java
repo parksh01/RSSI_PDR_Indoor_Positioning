@@ -17,6 +17,7 @@ public class Beacon implements Comparable<Beacon>{
     private double rssi_A_back;
     private double rssi_n_back;
     public boolean isFront; // true is front, false is back
+    public double X, Y;
 
     // variables which beacon will keep tracking.
     public ArrayList<String> rssi;
@@ -37,6 +38,13 @@ public class Beacon implements Comparable<Beacon>{
         this.rssiKalman = new ArrayList<String>();
         this.distance = new ArrayList<String>();
         this.tick = 0;
+    }
+
+    public Beacon(String MACaddress, double A_front, double n_front, double A_back, double n_back, int beaconNumber, boolean isFront, float rssItoDist_coordX, float rssItoDist_coordY) {
+        setBasicVar(MACaddress, A_front, n_front, A_back, n_back, beaconNumber);
+        this.isFront = isFront;
+        this.X = rssItoDist_coordX;
+        this.Y = rssItoDist_coordY;
     }
 
     // Constructor, default is isFront=true.
@@ -69,13 +77,11 @@ public class Beacon implements Comparable<Beacon>{
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
         try{
             if(file.exists()){
-                Log.d("configFile", fileName);
                 BufferedReader inFile = new BufferedReader(new FileReader(file));
                 String sLine = null;
                 int i = 1;
                 while( (sLine = inFile.readLine()) != null ) {
                     String[] currentBeaconInfo = sLine.split(",");
-                    Log.d("configFile", currentBeaconInfo[0]);
                     beaconList.add(currentBeaconInfo);
                     i++;
                 }

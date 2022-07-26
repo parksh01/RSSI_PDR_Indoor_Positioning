@@ -2,6 +2,8 @@ package org.techtown.rssimeasureapp;
 
 import static java.lang.Math.*;
 
+import java.util.ArrayList;
+
 public class Triangulation {
     public double x, y; // location of my device
     // coordinations of each beacon are denoted as :
@@ -10,30 +12,25 @@ public class Triangulation {
     // Beacon 3 = (0, 1)
     // Beacon 4 = (1, 1)
 
-    public void CalculateCoordinate(double r1, double r2, double r3, double r4) { // distance between each beacon and my device.
-        double x1 = (r2*r2 - r1*r1 - 1)/(-2);
-        double x2 = (r3*r3 - r4*r4 - 1)/(-2);
-        double y1 = (r3*r3 - r2*r2 - 1)/(-2);
-        double y2 = (r4*r4 - r1*r1 - 1)/(-2);
-
-        x = (x1+x2)/2;
-        y = (y1+y2)/2;
-    }
-
-    public void CalculateCoordinate(double r1, double r2) { // distance between each beacon and my device.
-        x = (r2*r2 - r1*r1 - 1)/(-2);
-        y = (r1*(sin(acos(x/r1))));
-    }
-
-    public Triangulation(){
-        x = 0;
-        y = 0;
-    }
-    public Triangulation(double r1, double r2, double r3, double r4){
-        CalculateCoordinate(r1, r2, r3, r4);
-    }
-    public Triangulation(double r1, double r2){
-        CalculateCoordinate(r1, r2);
+    public static float[] CalculateCoordinate(ArrayList<Float> currentDistance, ArrayList<Beacon> beacon) { // distance between each beacon and my device.
+        float[] val = new float[2];
+        if(currentDistance.size() == 3) {
+            float r1 = currentDistance.get(0);
+            float r2 = currentDistance.get(1);
+            float r3 = currentDistance.get(2);
+            float U = (float) beacon.get(1).X;
+            float Vx = (float) beacon.get(2).X;
+            float Vy = (float) beacon.get(2).Y;
+            float x = (r1*r1 - r2*r2 + U*U) / (2*U);
+            float y = (r1*r1 - r3*r3 + Vx*Vx + Vy*Vy - 2*Vx*x) / (2*Vy);
+            val[0] = x;
+            val[1] = y;
+        }
+        else{
+            val[0] = (float) 1.2345;
+            val[1] = (float) 1.2345;
+        }
+        return val;
     }
 
     public static double RssiToDistance(int rssi, double A, double n){

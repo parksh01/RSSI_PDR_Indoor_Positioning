@@ -14,11 +14,14 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -32,6 +35,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     ListItemAdapter adapter;
     ArrayList<String[]> beaconList;
+    TextView coordDisplay;
 
     // Beacon coordinates and front/back
     EditText Beacon01coordinates, Beacon02coordinates, Beacon03coordinates;
@@ -88,25 +94,7 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.BTlist);
         adapter = new ListItemAdapter();
         listView.setAdapter(adapter);
-
-        // storing values related to beacon coordinates.
-        Beacon01coordinates = findViewById(R.id.Beacon1Coordinate);
-        Beacon01coordinates.setText(PrefManager.getString(this, "Beacon01coordinates", "0,0"));
-
-        Beacon02coordinates = findViewById(R.id.Beacon2Coordinate);
-        Beacon02coordinates.setText(PrefManager.getString(this, "Beacon02coordinates", "0,0"));
-
-        Beacon03coordinates = findViewById(R.id.Beacon3Coordinate);
-        Beacon03coordinates.setText(PrefManager.getString(this, "Beacon03coordinates", "0,0"));
-
-        Beacon01isBack = findViewById(R.id.Beacon1isBack);
-        Beacon01isBack.setChecked(PrefManager.getBoolean(this,"Beacon01isChecked", false));
-
-        Beacon02isBack = findViewById(R.id.Beacon2isBack);
-        Beacon02isBack.setChecked(PrefManager.getBoolean(this,"Beacon02isChecked", false));
-
-        Beacon03isBack = findViewById(R.id.Beacon3isBack);
-        Beacon03isBack.setChecked(PrefManager.getBoolean(this,"Beacon03isChecked", false));
+        coordDisplay = findViewById(R.id.CoordinateDisplay);
 
         // read values from config file.
         beaconList = Beacon.readConfig("BeaconConfig.csv");
@@ -117,14 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        // Store RSSI to distance coefficients for further use.
         super.onPause();
-        PrefManager.setString(this, "Beacon01coordinates", Beacon01coordinates.getText().toString());
-        PrefManager.setString(this, "Beacon02coordinates", Beacon02coordinates.getText().toString());
-        PrefManager.setString(this, "Beacon03coordinates", Beacon03coordinates.getText().toString());
-        PrefManager.setBoolean(this, "Beacon01isChecked", Beacon01isBack.isChecked());
-        PrefManager.setBoolean(this, "Beacon02isChecked", Beacon02isBack.isChecked());
-        PrefManager.setBoolean(this, "Beacon03isChecked", Beacon03isBack.isChecked());
     }
 
     private void bleCheck(BluetoothAdapter bluetoothAdapter) {
@@ -184,6 +165,23 @@ public class MainActivity extends AppCompatActivity {
                             float RSSItoDist_n_value = Float.parseFloat(beaconList.get(currentBeacon)[2]);
                             float RSSItoDist_A_value_back = Float.parseFloat(beaconList.get(currentBeacon)[3]);
                             float RSSItoDist_n_value_back = Float.parseFloat(beaconList.get(currentBeacon)[4]);
+                            float RSSItoDist_coordX = 0;
+                            float RSSItoDist_coordY = 0;
+                            if(beaconList.get(currentBeacon).length == 6){
+                                // if the beacon is at (0, 0)
+                                RSSItoDist_coordX = 0;
+                                RSSItoDist_coordY = 0;
+                            }
+                            else if(beaconList.get(currentBeacon).length == 7){
+                                // if the beacon is at (U, 0)
+                                RSSItoDist_coordX = Float.parseFloat(beaconList.get(currentBeacon)[6]);
+                                RSSItoDist_coordY = 0;
+                            }
+                            else if(beaconList.get(currentBeacon).length == 8){
+                                // if the beacon is at (Vx, Vy)
+                                RSSItoDist_coordX = Float.parseFloat(beaconList.get(currentBeacon)[6]);
+                                RSSItoDist_coordY = Float.parseFloat(beaconList.get(currentBeacon)[7]);
+                            }
                             boolean isBack = false;
                             if(beaconList.get(currentBeacon)[5].equals("1")){
                                 isBack = false;
@@ -198,7 +196,15 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             // add to beacon list and start logging rssi-related data.
-                            adapter.beacon.add(new Beacon(device.getAddress(), RSSItoDist_A_value, RSSItoDist_n_value, RSSItoDist_A_value_back, RSSItoDist_n_value_back, beaconOrder, !isBack));
+                            adapter.beacon.add(new Beacon(device.getAddress(),
+                                    RSSItoDist_A_value,
+                                    RSSItoDist_n_value,
+                                    RSSItoDist_A_value_back,
+                                    RSSItoDist_n_value_back,
+                                    beaconOrder,
+                                    !isBack,
+                                    RSSItoDist_coordX,
+                                    RSSItoDist_coordY));
                             adapter.beacon.get(adapter.beacon.size()-1).setRssi(rssi);
 
                             // if there are multiple beacons already discovered, sort it.
@@ -215,6 +221,16 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    final Handler handler = new Handler(){
+        public void handleMessage(Message msg) {
+            if (!logGen.coordinateData.isEmpty()) {
+                coordDisplay.setText(String.format("%.3f", logGen.coordinateData.get(logGen.coordinateData.size() - 1)[0])
+                        + ", "
+                        + String.format("%.3f", logGen.coordinateData.get(logGen.coordinateData.size() - 1)[1]));
+            }
+        }
+    };
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     // start scanning.
     public void onScanClicked(View view) {
@@ -225,6 +241,15 @@ public class MainActivity extends AppCompatActivity {
         }
         bluetoothAdapter.startLeScan(leScanCallback);
         logGen.startLogging(adapter);
+        Timer timer = new Timer(true);
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                Message msg = handler.obtainMessage();
+                handler.sendMessage(msg);
+            }
+        };
+        timer.schedule(timerTask, 0, 100);
     }
 
     // stop scanning.
