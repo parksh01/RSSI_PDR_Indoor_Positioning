@@ -5,16 +5,12 @@ import static java.lang.Math.*;
 import java.util.ArrayList;
 
 public class Triangulation {
-    public double x, y; // location of my device
-    // coordinations of each beacon are denoted as :
-    // Beacon 1 = (0, 0)
-    // Beacon 2 = (1, 0)
-    // Beacon 3 = (0, 1)
-    // Beacon 4 = (1, 1)
-
     public static float[] CalculateCoordinate(ArrayList<Float> currentDistance, ArrayList<Beacon> beacon) { // distance between each beacon and my device.
         float[] val = new float[2];
         if(currentDistance.size() == 3) {
+            // Beacon #1 is on 0,0
+            // Beacon #2 is on U,0
+            // Beacon #3 is on Vx, Vy
             float r1 = currentDistance.get(0);
             float r2 = currentDistance.get(1);
             float r3 = currentDistance.get(2);
@@ -26,7 +22,14 @@ public class Triangulation {
             val[0] = x;
             val[1] = y;
         }
+        else if(currentDistance.size() == 4){
+            // Beacon #1 is on 0, 0
+            // Beacon #2 is on U, 0
+            // Beacon #3 is on 0, V
+            // Beacon #4 is on U, V
+        }
         else{
+            // Placeholder.
             val[0] = (float) 1.2345;
             val[1] = (float) 1.2345;
         }

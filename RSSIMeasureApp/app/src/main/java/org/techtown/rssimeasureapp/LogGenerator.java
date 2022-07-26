@@ -31,6 +31,7 @@ public class LogGenerator {
     int size;
     int dataCollected;
     int timeInterval;
+    ParticleFilter pf = new ParticleFilter(500, (float) 0.3);;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public LogGenerator(int size, int timeInterval) {
@@ -124,6 +125,8 @@ public class LogGenerator {
     // Starting logging distance data from each beacon.
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startLogging(ListItemAdapter adapter){
+        pf.setDimension(adapter.beacon);
+        pf.initParticles();
         if(startTime == null){
             startTime = LocalTime.now();
         }
@@ -148,8 +151,10 @@ public class LogGenerator {
                         distanceData.get(i).add("null");
                     }
                 }
-                float[] coordinate = Triangulation.CalculateCoordinate(currentDistance, adapter.beacon);
-                coordinateData.add(coordinate);
+                if(currentDistance.size() == size){
+                    float[] coordinate = pf.filtering(Triangulation.CalculateCoordinate(currentDistance, adapter.beacon));
+                    coordinateData.add(coordinate);
+                }
                 timeStamp.add(ChronoUnit.MILLIS.between(startTime, LocalTime.now()));
                 Log.v("test", "" + dataCollected + "/" + (ChronoUnit.MILLIS.between(startTime, LocalTime.now()) + "/" + distanceData.get(0).get(distanceData.get(0).size() - 1) + "/" + distanceData.get(1).get(distanceData.get(1).size() - 1) + "/" + distanceData.get(2).get(distanceData.get(2).size() - 1)));
                 dataCollected++;

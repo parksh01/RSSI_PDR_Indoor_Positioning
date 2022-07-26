@@ -50,10 +50,6 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String[]> beaconList;
     TextView coordDisplay;
 
-    // Beacon coordinates and front/back
-    EditText Beacon01coordinates, Beacon02coordinates, Beacon03coordinates;
-    CheckBox Beacon01isBack, Beacon02isBack, Beacon03isBack;
-
     // Log Generator
     LogGenerator logGen;
 
