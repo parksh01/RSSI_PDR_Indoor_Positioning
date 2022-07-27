@@ -5,8 +5,8 @@ import static java.lang.Math.*;
 import java.util.ArrayList;
 
 public class Triangulation {
-    public static float[] CalculateCoordinate(ArrayList<Float> currentDistance, ArrayList<Beacon> beacon) { // distance between each beacon and my device.
-        float[] val = new float[2];
+    public static double[] CalculateCoordinate(ArrayList<Float> currentDistance, ArrayList<Beacon> beacon) { // distance between each beacon and my device.
+        double[] val = new double[2];
         if(currentDistance.size() == 3) {
             // Beacon #1 is on 0,0
             // Beacon #2 is on U,0

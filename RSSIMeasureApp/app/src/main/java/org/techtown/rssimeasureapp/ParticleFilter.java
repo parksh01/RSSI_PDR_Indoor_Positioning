@@ -35,9 +35,9 @@ public class ParticleFilter {
     // Particle : [x, y, weight]
     ArrayList<Particle> particles;
     // Particle move boundary
-    float bound;
+    double bound;
 
-    public ParticleFilter(int particleCount, float bound){
+    public ParticleFilter(int particleCount, double bound){
         this.particleCount = particleCount;
         this.bound = bound;
         this.particles = new ArrayList<Particle>();
@@ -61,42 +61,41 @@ public class ParticleFilter {
         return temp.get((temp.size()) / 2);
     }
 
-    public float[] filtering(float[] inputCoordinate){
-        float[] val = new float[2];
+    public double[] filtering(double[] inputCoordinate){
+        double[] val = new double[2];
 
         // Prediction
         for(int i = 0;i<this.particleCount;i++){
-            particles.get(i).x += (Math.random() * this.bound - (this.bound/2));
-            particles.get(i).y += (Math.random() * this.bound - (this.bound/2));
+            particles.get(i).x += (Math.random() * this.bound - (this.bound/2.0));
+            particles.get(i).y += (Math.random() * this.bound - (this.bound/2.0));
             particles.get(i).weight = 0.0;
         }
 
         // Update - The particle closer to measured coordinate gets higher weight.
         for(int i = 0;i<this.particleCount;i++){
-            particles.get(i).weight = (1.0 / (Math.sqrt(Math.pow(particles.get(i).x - inputCoordinate[0], 2.0) + Math.pow(particles.get(i).y - inputCoordinate[1], 2.0))));
+            particles.get(i).weight = giveWeight(particles.get(i), inputCoordinate);
+        }
+
+        for(int i=0;i<particles.size();i++){
+            Log.d("particle", String.format("%.3f", particles.get(i).x) + ',' + String.format("%.3f", particles.get(i).y) + '/' + String.format("%.3f", particles.get(i).weight));
         }
 
         // Resampling
+        Collections.sort(particles, Collections.reverseOrder());
+        /*
         // While resampling, weights smaller than median will be discarded
-        ArrayList<Double> weights = new ArrayList<Double>();
-        for(int i = 0;i<this.particleCount;i++){
-            weights.add(particles.get(i).weight);
+        for(int i=particles.size() - 1;particleCount/2 < i;i--){
+            particles.remove(i);
         }
-        double median = getMedian(weights);
-        for(int i = 0;i<this.particleCount;i++){
-            if(weights.get(i) < median){
-                particles.remove(i);
-            }
-        }
+        */
         // Filtered value will be the particle's coordination which has biggest weight.
-        Collections.sort(particles);
-        val[0] = (float) particles.get(particles.size() - 1).x;
-        val[1] = (float) particles.get(particles.size() - 1).y;
-
-        // Implementing weighted random choice
+        val[0] = particles.get(0).x;
+        val[1] = particles.get(0).y;
+        // Finally, perform resampling.
         ArrayList<Particle> newParticle = new ArrayList<Particle>();
         for(int i = 0;i<particleCount;i++){
-            newParticle.add(randomChoice(particles));
+            int picked = randomChoice(particles);
+            newParticle.add(new Particle(particles.get(picked).x, particles.get(picked).y, 0.0));
         }
         particles.clear();
         particles = (ArrayList<Particle>)newParticle.clone();
@@ -104,7 +103,17 @@ public class ParticleFilter {
         return val;
     }
 
-    private Particle randomChoice(ArrayList<Particle> particles) {
+    private double giveWeight(Particle particle, double[] inputCoordinate){
+        /*
+        double sigma = 0.5;
+        double px = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * (Math.exp(-1 * Math.pow(particle.x - inputCoordinate[0], 2.0) / (2 * Math.pow(sigma, 2.0))));
+        double py = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * (Math.exp(-1 * Math.pow(particle.y - inputCoordinate[1], 2.0) / (2 * Math.pow(sigma, 2.0))));
+        return px*py;
+        */
+        return (1.0 / (Math.sqrt(Math.pow(particle.x - inputCoordinate[0], 2.0) + Math.pow(particle.y - inputCoordinate[1], 2.0))));
+    }
+
+    private int randomChoice(ArrayList<Particle> particles) {
         // First, get the array of cumulated weights.
         ArrayList<Double> cumWeights = new ArrayList<Double>();
         cumWeights.add(0.0);
@@ -115,12 +124,12 @@ public class ParticleFilter {
         double pick = Math.random() * cumWeights.get(cumWeights.size() - 1);
         int pickedParticle = -1;
         for(int i = 0;i<particles.size();i++){
+            pickedParticle = i;
             if(cumWeights.get(i) <= pick && pick < cumWeights.get(i + 1)){
-                pickedParticle = i;
                 break;
             }
         }
 
-        return particles.get(pickedParticle);
+        return pickedParticle;
     }
 }

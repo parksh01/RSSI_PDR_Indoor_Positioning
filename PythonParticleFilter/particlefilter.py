@@ -24,8 +24,8 @@ def pf(measured, particleCount, measureRange):
     for coord in measured:
         # Prediction
         for i in range(particleCount):
-            particle[i][0] += (random.random()*0.3 - 0.15)
-            particle[i][1] += (random.random()*0.3 - 0.15)
+            particle[i][0] += (random.random()*0.5 - 0.25)
+            particle[i][1] += (random.random()*0.5 - 0.25)
             particle[i][2] = 0.0
 
         # Update
@@ -45,6 +45,7 @@ def pf(measured, particleCount, measureRange):
                 w[i] = 0.0
 
         # Random select particles by their weights
+        print(w)
         particle_num = (random.choices(range(particleCount), weights=w, k=particleCount))
         result.append(particle[max(particle_num, key=particle_num.count)])
 
@@ -60,8 +61,6 @@ def pf(measured, particleCount, measureRange):
 
 val = csvopen.readcsv('testcase/Distance Log 2,2.csv')
 val = csvopen.locateCoordinate(val, 5)
-pfvalue = pf(val, 500, 5)
+pfvalue = pf(val, 1000, 5)
 x = 0.0
 y = 0.0
-for i in range(len(val)):
-    print(str(pfvalue[i][0]) + ',' + str(pfvalue[i][1]) + ',' + str(val[i][0]) + ',' + str(val[i][1]))

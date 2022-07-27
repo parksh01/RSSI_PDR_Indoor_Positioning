@@ -24,14 +24,14 @@ import java.util.TimerTask;
 
 public class LogGenerator {
     private ArrayList<ArrayList<String>> distanceData = new ArrayList<ArrayList<String>>();
-    public ArrayList<float[]> coordinateData = new ArrayList<float[]>();
+    public ArrayList<double[]> coordinateData = new ArrayList<double[]>();
     private ArrayList<Long> timeStamp = new ArrayList<Long>();
     Timer scheduler;
     LocalTime startTime;
     int size;
     int dataCollected;
     int timeInterval;
-    ParticleFilter pf = new ParticleFilter(500, (float) 0.3);;
+    ParticleFilter pf = new ParticleFilter(1000, 0.3);;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public LogGenerator(int size, int timeInterval) {
@@ -152,11 +152,10 @@ public class LogGenerator {
                     }
                 }
                 if(currentDistance.size() == size){
-                    float[] coordinate = pf.filtering(Triangulation.CalculateCoordinate(currentDistance, adapter.beacon));
+                    double[] coordinate = pf.filtering(Triangulation.CalculateCoordinate(currentDistance, adapter.beacon));
                     coordinateData.add(coordinate);
                 }
                 timeStamp.add(ChronoUnit.MILLIS.between(startTime, LocalTime.now()));
-                Log.v("test", "" + dataCollected + "/" + (ChronoUnit.MILLIS.between(startTime, LocalTime.now()) + "/" + distanceData.get(0).get(distanceData.get(0).size() - 1) + "/" + distanceData.get(1).get(distanceData.get(1).size() - 1) + "/" + distanceData.get(2).get(distanceData.get(2).size() - 1)));
                 dataCollected++;
             }
         };
