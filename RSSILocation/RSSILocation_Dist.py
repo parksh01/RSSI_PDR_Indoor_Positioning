@@ -17,10 +17,6 @@ coord = 5
 # start of algorithm
 distErrorX0 = []
 distErrorY0 = []
-distErrorX1 = []
-distErrorY1 = []
-distErrorX2 = []
-distErrorY2 = []
 # beacon01 : (5, 0)
 # beacon02 : (0, 0)
 # beacon03 : (0, 5)
