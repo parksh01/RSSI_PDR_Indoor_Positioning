@@ -17,7 +17,7 @@ meters = int(input("meters? : "))
 kf_or_raw = input("kf or raw? : ")
 beaconNum = input("beacon number? : ")
 
-filename = 'inputdata3/Beacon 0' + beaconNum
+filename = 'inputdata4/Beacon 0' + beaconNum
 
 # read files and get rssi values
 for i in range(7):
@@ -112,6 +112,22 @@ elif kf_or_raw == 'raw':
     violin = ax.violinplot(rssi_y_raw, positions=range(1, 7 + 1))
     plt.plot(range(1, 7 + 1), rssi_avg_raw, 'r^', label='rssi_avg_raw')
     plt.plot(range(1, 7 + 1), func(range(1, 7 + 1), *popt1), label='curve(avg)', color='r')
+
+plt.legend()
+plt.show()
+
+fig, ax = plt.subplots()
+ax.set_xlabel('meters')
+ax.set_ylabel('measured')
+measured = [1.1, 1.9, 2.5, 4.4, 5.5, 6.6, 7.7]
+aspected = [1, 2, 3, 4, 5, 6, 7]
+error = []
+for i in range(7):
+    error.append(abs(measured[i] - aspected[i]))
+plt.plot(range(1, 7+1), measured, 'r-', label='measured')
+plt.plot(range(1, 7+1), aspected, 'b-', label='aspected')
+for i in range(7):
+    plt.text(i + 1, measured[i] + 0.5, 'error : %.3f' %error[i], fontsize = 9, color = 'green', horizontalalignment = 'center', verticalalignment = 'bottom')
 
 plt.legend()
 plt.show()
