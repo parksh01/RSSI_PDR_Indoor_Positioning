@@ -17,7 +17,12 @@ meters = int(input("meters? : "))
 kf_or_raw = input("kf or raw? : ")
 beaconNum = input("beacon number? : ")
 
-filename = 'inputdata4/Beacon 0' + beaconNum
+filename = str()
+if beaconNum == '4':
+    filename = 'inputdata4/'
+else:
+    filename = 'inputdata3/'
+filename += 'Beacon 0' + beaconNum
 
 # read files and get rssi values
 for i in range(7):
