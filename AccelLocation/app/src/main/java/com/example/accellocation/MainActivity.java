@@ -68,21 +68,27 @@ public class MainActivity extends AppCompatActivity {
             switch(biggestIndex){
                 case 0:
                     coordType2.setText("stop");
+                    accelLocation.isMoving = false;
                     break;
                 case 1:
                     coordType2.setText("stopLeft");
+                    accelLocation.isMoving = false;
                     break;
                 case 2:
                     coordType2.setText("stopRight");
+                    accelLocation.isMoving = false;
                     break;
                 case 3:
                     coordType2.setText("move");
+                    accelLocation.isMoving = true;
                     break;
                 case 4:
                     coordType2.setText("moveLeft");
+                    accelLocation.isMoving = true;
                     break;
                 case 5:
                     coordType2.setText("moveRight");
+                    accelLocation.isMoving = true;
                     break;
             }
         }

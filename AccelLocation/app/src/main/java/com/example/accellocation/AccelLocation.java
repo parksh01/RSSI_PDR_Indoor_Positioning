@@ -29,6 +29,8 @@ public class AccelLocation implements SensorEventListener{
     final private int sensorType = Sensor.TYPE_LINEAR_ACCELERATION;
     private ArrayList<Float> recentVal;
 
+    public boolean isMoving;
+
     AccelLocation(TextView view, SensorManager manager, Context context){
         this.view = view;
         this.context = context;
@@ -39,7 +41,7 @@ public class AccelLocation implements SensorEventListener{
         Sensor sensor = manager.getDefaultSensor(sensorType);
         kf = new ArrayList<KalmanFilter>();
         for(int i=0;i<3;i++){
-            kf.add(new KalmanFilter(1, 10));
+            kf.add(new KalmanFilter(1, 1, 10));
         }
     }
 
@@ -52,9 +54,9 @@ public class AccelLocation implements SensorEventListener{
             prevAccY = accY;
             prevAccZ = accZ;
             prevAccel = accel;
-            accX = sensorEvent.values[0];
-            accY = sensorEvent.values[1];
-            accZ = sensorEvent.values[2];
+            accX = (float) kf.get(0).filtering(sensorEvent.values[0]);
+            accY = (float) kf.get(1).filtering(sensorEvent.values[1]);
+            accZ = (float) kf.get(2).filtering(sensorEvent.values[2]);
 
             accel = (float) Math.sqrt(accX * accX + accY * accY + accZ * accZ);
             if(recentVal.size() > detectThresh) {
@@ -76,7 +78,12 @@ public class AccelLocation implements SensorEventListener{
                 velZ = velZ + (prevAccZ + accZ) * interval / 2;
                 spd = spd + (prevAccel + accel) * interval / 2;
                 // While not moving
+                /*
                 if(Statistics.stdev(recentVal) < 0.05){
+                    velX = 0; velY = 0; velZ = 0; spd = 0;
+                }
+                */
+                if(!isMoving){
                     velX = 0; velY = 0; velZ = 0; spd = 0;
                 }
 

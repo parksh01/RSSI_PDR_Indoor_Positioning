@@ -28,6 +28,14 @@ public class KalmanFilter {
         this.measurementNoise = measurementNoise;
         this.predictedRSSI = 0;
     }
+    public KalmanFilter(double errCov, double processNoise, double measurementNoise){
+        this.errorCovariance = errCov;
+        this.initialized = false;
+        this.processNoise = processNoise;
+        this.measurementNoise = measurementNoise;
+        this.predictedRSSI = 0;
+    }
+
     public double filtering(double val){ // rssi : m_t (current measured RSSI value)
         // Update
         if(!this.initialized){
