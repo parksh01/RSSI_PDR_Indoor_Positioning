@@ -13,6 +13,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor stepCountSensor;
     Sensor accelSensor;
+    Sensor gyroSensor;
 
     int currentStepsAccel;
     int currentStepsStepSensor;
@@ -35,11 +38,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     double stepThresh;
     int stepIntervalThresh = 300;
     int steptick = 0;
+    double currentAngleVel, prevAngleVel;
+    double currentAngle;
+    double timeBefore, timeAfter;
+    double locx = 0, locy = 0;
 
     Button resetButton;
     TextView stepCountView;
     TextView stepCountViewStepSensor;
     TextView stepCountViewCombine;
+    TextView currentAngleDisplay;
+    TextView locationDisplay;
     EditText inputStepThresh;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -54,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stepCountViewStepSensor = (TextView)findViewById(R.id.stepCountViewStepSensor);
         stepCountViewCombine = (TextView)findViewById(R.id.stepCountViewCombine);
         inputStepThresh = (EditText)findViewById(R.id.editStepThresh);
+        currentAngleDisplay = (TextView)findViewById(R.id.currentAngleDisplay);
+        locationDisplay = (TextView)findViewById(R.id.locationDisplay);
 
         // Ask for permission
         if(ContextCompat.checkSelfPermission(this,
@@ -75,6 +86,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Toast.makeText(this, "No Accelerometer", Toast.LENGTH_SHORT).show();
         }
 
+        // Use Gyroscope
+        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        if(gyroSensor == null){
+            Toast.makeText(this, "No Gyroscope", Toast.LENGTH_SHORT).show();
+        }
+        currentAngle = 0;
+
         // Reset button.
         resetButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -94,10 +112,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if(accelSensor != null){
             sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
+        if(gyroSensor != null){
+            sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
+        }
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        timeBefore = timeAfter;
+        timeAfter = System.nanoTime();
+
         // Detect step by step detector.
         if(sensorEvent.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
             if(sensorEvent.values[0]==1.0f){
@@ -105,6 +129,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 currentStepsCombine++;
                 currentStepTimeStepSensor = System.currentTimeMillis();
                 stepCountViewStepSensor.setText(String.valueOf(currentStepsStepSensor));
+                locx -= Math.sin(currentAngle * Math.PI);
+                locy += Math.cos(currentAngle * Math.PI);
             }
 
         }
@@ -130,6 +156,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     currentStepsCombine++;
                     currentStepTimeAccel = currentStepTime;
                     stepCountView.setText(String.valueOf(currentStepsAccel));
+                    locx -= Math.sin(currentAngle * Math.PI);
+                    locy += Math.cos(currentAngle * Math.PI);
                 }
             }
         }
@@ -137,12 +165,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Combining both sensors
         if(Math.abs(currentStepTimeAccel - currentStepTimeStepSensor) < stepIntervalThresh){
             currentStepsCombine--;
+            locx += Math.sin(currentAngle * Math.PI);
+            locy -= Math.cos(currentAngle * Math.PI);
             currentStepTimeAccel = 100000;
             stepCountViewCombine.setText(String.valueOf(currentStepsCombine));
+            locationDisplay.setText(String.format("%.3f", locx) + ", " + String.format("%.3f", locy));
         }
         else{
             stepCountViewCombine.setText(String.valueOf(currentStepsCombine));
+            locationDisplay.setText(String.format("%.3f", locx) + ", " + String.format("%.3f", locy));
         }
+
+        // Calculate orientation of device by its rotation velocity.
+        if(sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE){
+            prevAngleVel = currentAngleVel;
+            double velx = sensorEvent.values[0];
+            double vely = sensorEvent.values[1];
+            double velz = sensorEvent.values[2];
+            double currentAngleVel = Math.sqrt(vely*vely + velz*velz);
+            if(((Math.abs(vely) > Math.abs(velz)) && (vely < 0)) || ((Math.abs(vely) < Math.abs(velz)) && (velz < 0))){
+                currentAngleVel *= (-1);
+            }
+            currentAngle += (prevAngleVel + currentAngleVel) * ((timeAfter - timeBefore)/1000000000) / 2.0;
+            currentAngleDisplay.setText(String.format("%.3f", currentAngle) + "pi");
+        }
+
+        Log.d("angle", String.format("%.3f", Math.sin(currentAngle * Math.PI)) + ", " + String.format("%.3f", Math.cos(currentAngle * Math.PI)));
     }
 
     @Override
