@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read sensor data
-f = open('inputData/Sensor Data - 2022-08-16-12시 52분 16초.csv', 'r')
+f = open('inputData/Sensor Data 03.csv', 'r')
 rdr = csv.reader(f)
 xvalues = []
 yvalues = []
@@ -27,7 +27,7 @@ values.append(zvalues)
 
 axis = 0
 x = values[axis][0] # 초기 추정값
-P = np.array([[1]]) # 초기 추정값에 대한 오차 공분산
+P = np.array([[10]]) # 초기 추정값에 대한 오차 공분산
 A = np.array([[1]]) # 시스템 행렬
 H = np.array([[1]]) # 출력 행렬
 Q = np.array([[1]]) # 시스템 오차

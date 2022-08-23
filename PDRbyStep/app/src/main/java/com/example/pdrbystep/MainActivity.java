@@ -13,6 +13,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -21,6 +22,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -31,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     int currentStepsAccel;
     int currentStepsStepSensor;
-    int currentStepsCombine;
+    int currentStepsCombine = 1;
     double currentAccel, prevAccel;
     double currentStepTime, prevStepTime;
     double currentStepTimeStepSensor, currentStepTimeAccel;
@@ -41,7 +49,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     double currentAngleVel, prevAngleVel;
     double currentAngle;
     double timeBefore, timeAfter;
-    double locx = 0, locy = 0;
+    double locx = 0, locy = 1.0;
+    ArrayList<Double> locxLog, locyLog;
+
+    // for detecting step change
+    int beforeStep;
+    int currentStep;
 
     Button resetButton;
     TextView stepCountView;
@@ -50,12 +63,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView currentAngleDisplay;
     TextView locationDisplay;
     EditText inputStepThresh;
+    Button logButton;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        locxLog = new ArrayList<Double>();
+        locyLog = new ArrayList<Double>();
 
         // UI Elements.
         resetButton = (Button)findViewById(R.id.resetButton);
@@ -65,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         inputStepThresh = (EditText)findViewById(R.id.editStepThresh);
         currentAngleDisplay = (TextView)findViewById(R.id.currentAngleDisplay);
         locationDisplay = (TextView)findViewById(R.id.locationDisplay);
+        logButton = (Button)findViewById(R.id.logButton);
 
         // Ask for permission
         if(ContextCompat.checkSelfPermission(this,
@@ -103,6 +121,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 stepCountViewStepSensor.setText(String.valueOf(currentStepsStepSensor));
             }
         });
+
+        // Log Button
+        logButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onClick(View view) {
+                String filename = "CoordLogPDR - " + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + ".csv";
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), filename);
+                try{
+                    if(!file.exists()){
+                        file.createNewFile();
+                    }
+                    FileWriter writer = new FileWriter(file, false);
+                    String str = "locX,locY\n";
+                    for(int i=0;i<locxLog.size();i++){
+                        str += (String.format("%.3f", locxLog.get(i)) + ",");
+                        str += (String.format("%.3f", locyLog.get(i)) + "\n");
+                    }
+                    writer.write(str);
+                    writer.close();
+                    Toast.makeText(getApplicationContext(), "Coord Log Generated", Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
     public void onStart() {
         super.onStart();
@@ -121,6 +165,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent sensorEvent) {
         timeBefore = timeAfter;
         timeAfter = System.nanoTime();
+
+        beforeStep = currentStep;
+        currentStep = Integer.parseInt(stepCountViewCombine.getText().toString());
 
         // Detect step by step detector.
         if(sensorEvent.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
@@ -176,6 +223,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             locationDisplay.setText(String.format("%.3f", locx) + ", " + String.format("%.3f", locy));
         }
 
+        // Log each step
+        if(currentStep != beforeStep){
+            logStep(locx, locy);
+        }
+
         // Calculate orientation of device by its rotation velocity.
         if(sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE){
             prevAngleVel = currentAngleVel;
@@ -190,11 +242,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             currentAngleDisplay.setText(String.format("%.3f", currentAngle) + "pi");
         }
 
-        Log.d("angle", String.format("%.3f", Math.sin(currentAngle * Math.PI)) + ", " + String.format("%.3f", Math.cos(currentAngle * Math.PI)));
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    // Logging each step
+    public void logStep(double x, double y){
+        locxLog.add(x);
+        locyLog.add(y);
     }
 }

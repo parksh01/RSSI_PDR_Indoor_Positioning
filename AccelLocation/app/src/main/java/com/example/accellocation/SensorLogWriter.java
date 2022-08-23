@@ -29,6 +29,9 @@ public class SensorLogWriter {
     private String extension = ".csv";
     private int tick;
 
+    private ArrayList<Float> coordX;
+    private ArrayList<Float> coordY;
+
     SensorLogWriter(){
         this.accelX = new ArrayList<Float>();
         this.accelY = new ArrayList<Float>();
@@ -39,6 +42,9 @@ public class SensorLogWriter {
         this.tag = new ArrayList<String>();
         this.currentTag = "stop";
         this.tick = 0;
+
+        this.coordX = new ArrayList<Float>();
+        this.coordY = new ArrayList<Float>();
     }
     public void addValue(float accelX, float accelY, float accelZ, float angleX, float angleY, float angleZ){
         this.accelX.add(accelX);
@@ -72,7 +78,34 @@ public class SensorLogWriter {
             }
             writer.write(str);
             writer.close();
-            Toast.makeText(context, "Log Generated", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Sensor Log Generated", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addValueCoord(float x, float y){
+        this.coordX.add(x);
+        this.coordY.add(y);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void generateCoordLog(Context context){
+        String filename = "CoordLog - " + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + this.extension;
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), filename);
+        try{
+            if(!file.exists()){
+                file.createNewFile();
+            }
+            FileWriter writer = new FileWriter(file, false);
+            String str = "coordX,coordY\n";
+            for(int i=0;i<this.coordX.size();i++){
+                str += Float.toString(this.coordX.get(i)) + ",";
+                str += Float.toString(this.coordY.get(i)) + "\n";
+            }
+            writer.write(str);
+            writer.close();
+            Toast.makeText(context, "Coord Log Generated", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     TextView coordinateDisplay;
     TextView directionDisplay;
     TextView coordType2;
+    TextView coordbyangle;
 
     SensorManager AccelManager, RotManager;
     AccelLocation accelLocation;
@@ -56,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
 
     final Handler coordType2Handler = new Handler(){
         public void handleMessage(Message msg){
-            coordType2.setText("(" + String.format("%.3f", coordX) + ", " + String.format("%.3f", coordY) + ")");
+            coordbyangle.setText("(" + String.format("%.3f", coordX) + ", " + String.format("%.3f", coordY) + ")");
+            sensorLogWriter.addValueCoord(coordX, coordY);
             float biggest = 0;
             int biggestIndex = -1;
             for(int i = 0;i<6;i++){
@@ -103,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
         coordinateDisplay = (TextView)findViewById(R.id.coordinateDisplay);
         directionDisplay = (TextView)findViewById(R.id.directionDisplay);
         coordType2 = (TextView)findViewById(R.id.coordinateType2Display);
+        coordbyangle = (TextView)findViewById(R.id.coordbyangle);
 
         AccelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         RotManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -160,6 +164,8 @@ public class MainActivity extends AppCompatActivity {
                             tflite.run(input, output);
                             coordType2Handler.sendMessage(msg);
                         }
+
+
                     }
                 };
                 scheduler.scheduleAtFixedRate(task, 0, 10);
@@ -178,6 +184,11 @@ public class MainActivity extends AppCompatActivity {
     public void onLogButtonClick(View view) {
         sensorLogWriter.generate(getApplicationContext());
     }
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void onCoordLogButtonClick(View view) {
+        sensorLogWriter.generateCoordLog(getApplicationContext());
+    }
+
 
     public void onStopClick(View view) {
         sensorLogWriter.currentTag = "stop";
