@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if(((Math.abs(vely) > Math.abs(velz)) && (vely < 0)) || ((Math.abs(vely) < Math.abs(velz)) && (velz < 0))){
                 currentAngleVel *= (-1);
             }
-            currentAngle += (prevAngleVel + currentAngleVel) * ((timeAfter - timeBefore)/1000000000) / 2.0;
+            currentAngle += ((prevAngleVel + currentAngleVel) * ((timeAfter - timeBefore)/1000000000) / 2.0) * (2.0/1.8);
             currentAngleDisplay.setText(String.format("%.3f", currentAngle) + "pi");
         }
 
