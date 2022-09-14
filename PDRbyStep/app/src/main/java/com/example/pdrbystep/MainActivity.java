@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     double timeBefore, timeAfter;
     double locx = 0, locy = 1.0;
     ArrayList<Double> locxLog, locyLog;
+    ArrayList<Float> accelxLog, accelyLog, accelzLog, isStep;
 
     // for detecting step change
     int beforeStep;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView locationDisplay;
     EditText inputStepThresh;
     Button logButton;
+    Button accelLogButton;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -73,6 +75,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         locxLog = new ArrayList<Double>();
         locyLog = new ArrayList<Double>();
+        accelxLog = new ArrayList<Float>();
+        accelyLog = new ArrayList<Float>();
+        accelzLog = new ArrayList<Float>();
+        isStep = new ArrayList<Float>();
 
         // UI Elements.
         resetButton = (Button)findViewById(R.id.resetButton);
@@ -83,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         currentAngleDisplay = (TextView)findViewById(R.id.currentAngleDisplay);
         locationDisplay = (TextView)findViewById(R.id.locationDisplay);
         logButton = (Button)findViewById(R.id.logButton);
+        accelLogButton = (Button)findViewById(R.id.accelLogButton);
 
         // Ask for permission
         if(ContextCompat.checkSelfPermission(this,
@@ -122,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        // Log Button
+        // Step log Button
         logButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
@@ -147,6 +154,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         });
+
+        // Accelerometer log Button
+        accelLogButton.setOnClickListener(new View.OnClickListener(){
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onClick(View view) {
+                String filename = "accelLog - " + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + ".csv";
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), filename);
+                try{
+                    if(!file.exists()){
+                        file.createNewFile();
+                    }
+                    FileWriter writer = new FileWriter(file, false);
+                    String str = "accelX,accelY,accelZ,label\n";
+                    for(int i=0;i<isStep.size();i++){
+                        str += (String.format("%.3f", accelxLog.get(i)) + ",");
+                        str += (String.format("%.3f", accelyLog.get(i)) + ",");
+                        str += (String.format("%.3f", accelzLog.get(i)) + ",");
+                        str += (String.format("%.3f", isStep.get(i)) + "\n");
+                    }
+                    writer.write(str);
+                    writer.close();
+                    Toast.makeText(getApplicationContext(), "accel Log Generated", Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
     }
     public void onStart() {
         super.onStart();
@@ -170,6 +206,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         currentStep = Integer.parseInt(stepCountViewCombine.getText().toString());
 
         // Detect step by step detector.
+        // Only log when step is detected by step detector.
         if(sensorEvent.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
             if(sensorEvent.values[0]==1.0f){
                 currentStepsStepSensor++;
@@ -178,12 +215,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 stepCountViewStepSensor.setText(String.valueOf(currentStepsStepSensor));
                 locx -= Math.sin(currentAngle * Math.PI);
                 locy += Math.cos(currentAngle * Math.PI);
+
+                // Mark 'Stepped' on log data.
+                isStep.set(isStep.size()-1, 1.0f);
             }
 
         }
 
         // Detect step by accelerometer.
         if(sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){
+            // first, log accelerometer data.
+            logAccel(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
+
             // get Accel threshold value.
             if ( inputStepThresh.getText().toString().length() == 0 ) {
                 stepThresh = 1.0;
@@ -253,5 +296,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void logStep(double x, double y){
         locxLog.add(x);
         locyLog.add(y);
+    }
+
+    public void logAccel(float x, float y, float z){
+        accelxLog.add(x);
+        accelyLog.add(y);
+        accelzLog.add(z);
+        isStep.add(0.0f);
     }
 }
