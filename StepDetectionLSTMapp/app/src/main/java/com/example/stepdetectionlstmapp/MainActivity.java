@@ -39,10 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Variables for ML based step detection.
     Interpreter tflite;
-    float[][][] input;
-    float[][] output;
     final int sliceSize= 30;
-    int tick = 0;
 
     boolean isStepDetectOn = false;
 
@@ -51,8 +48,8 @@ public class MainActivity extends AppCompatActivity {
             float biggest = 0;
             int biggestIndex = -1;
             for(int i = 0;i<2;i++){
-                if(biggest < output[0][i]){
-                    biggest = output[0][i];
+                if(biggest < accelListener.output[0][i]){
+                    biggest = accelListener.output[0][i];
                     biggestIndex = i;
                 }
             }
@@ -74,8 +71,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Load ML model
         tflite = getTfliteInterpreter("stepdetectLSTM.tflite");
-        input = new float[1][sliceSize][3];
-        output = new float[1][2];
 
         // Enable sensor.
         accelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -96,18 +91,6 @@ public class MainActivity extends AppCompatActivity {
                     TimerTask task = new TimerTask() {
                         @Override
                         public void run() {
-                            // Prepare input data for ML model.
-                            for(int i = 0;i<sliceSize - 1;i++){
-                                input[0][i][0] = input[0][i+1][0];
-                                input[0][i][1] = input[0][i+1][1];
-                                input[0][i][2] = input[0][i+1][2];
-                            }
-                            input[0][sliceSize - 1][0] = (float) accelListener.accX;
-                            input[0][sliceSize - 1][1] = (float) accelListener.accY;
-                            input[0][sliceSize - 1][2] = (float) accelListener.accZ;
-
-                            tflite.run(input, output);
-
                             // Update UI element
                             Message msg = coordType2Handler.obtainMessage();
                             coordType2Handler.sendMessage(msg);
@@ -145,11 +128,32 @@ public class MainActivity extends AppCompatActivity {
 
     private class AccelometerListener implements SensorEventListener {
         public double accX, accY, accZ;
+        float[][][] input;
+        float[][] output;
+
+        AccelometerListener(){
+            this.input = new float[1][sliceSize][3];
+            this.output = new float[1][2];
+        }
+
         @Override
         public void onSensorChanged(SensorEvent event) {
             accX = event.values[0];
             accY = event.values[1];
             accZ = event.values[2];
+
+            // Prepare input data for ML model.
+            for(int i = 0;i<sliceSize - 1;i++){
+                input[0][i][0] = input[0][i+1][0];
+                input[0][i][1] = input[0][i+1][1];
+                input[0][i][2] = input[0][i+1][2];
+            }
+            input[0][sliceSize - 1][0] = (float) this.accX;
+            input[0][sliceSize - 1][1] = (float) this.accY;
+            input[0][sliceSize - 1][2] = (float) this.accZ;
+
+            // Run the model.
+            tflite.run(this.input, this.output);
         }
 
         @Override
