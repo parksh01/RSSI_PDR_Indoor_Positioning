@@ -12,7 +12,7 @@ def label(labels):
         n = n + 1
     return label2num, num2label
 
-def load_testcases(path, sliceSize, label2num):
+def load_testcases(path, sliceSize, label2num, dimension):
     # First, read file and store in array
     num_classes = len(label2num)
     f = open(path, 'r')
@@ -26,10 +26,10 @@ def load_testcases(path, sliceSize, label2num):
             linecount = linecount + 1
         else:
             temp = []
-            for i in range(num_classes):
+            for i in range(dimension):
                 temp.append(float(line[i].strip()))
             X_test.append(temp)
-            y_test.append(oneHotEncode(label2num[line[num_classes]], num_classes))
+            y_test.append(oneHotEncode(label2num[line[dimension]], num_classes))
             linecount = linecount + 1
     f.close()
     # then slice it.
@@ -37,7 +37,7 @@ def load_testcases(path, sliceSize, label2num):
     slicedLabel = []
     for i in range(0, linecount - sliceSize):
         slicedLabel.append(y_test[i + int(sliceSize/2)])
-    return np.array(slicedData).reshape(-1, sliceSize, num_classes), np.array(slicedLabel).reshape(-1, num_classes)
+    return np.array(slicedData), np.array(slicedLabel)
 
 # Do one hot encoding with given category number.
 def oneHotEncode(whichCategory, howMany):
@@ -87,9 +87,9 @@ def sliceData_withLabel(data, sliceSize):
         for j in range(sliceSize):
             temp1.append(data[i+j][:-1])
         slicedData.append(temp1)
-        if (data[i][-1] == '1'):
+        if (data[i][-1] == 1.0):
             slicedLabel.append([1, 0])
-        else:
+        elif (data[i][-1] == 0.0):
             slicedLabel.append([0, 1])
     if(len(slicedData) == len(slicedLabel)):
         return slicedData, slicedLabel
