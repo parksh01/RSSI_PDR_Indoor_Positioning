@@ -45,22 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     final Handler coordType2Handler = new Handler(){
         public void handleMessage(Message msg){
-            float biggest = 0;
-            int biggestIndex = -1;
-            for(int i = 0;i<2;i++){
-                if(biggest < accelListener.output[0][i]){
-                    biggest = accelListener.output[0][i];
-                    biggestIndex = i;
-                }
-            }
-            switch(biggestIndex){
-                case 0:
-                    stepStatus.setText("walk");
-                    break;
-                case 1:
-                    stepStatus.setText("-");
-                    break;
-            }
+            stepStatus.setText(accelListener.stepCount + "");
         }
     };
 
@@ -87,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 isStepDetectOn = !isStepDetectOn;
                 if(isStepDetectOn){
+                    accelListener.init(22);
                     scheduler = new Timer();
                     TimerTask task = new TimerTask() {
                         @Override
@@ -130,10 +116,26 @@ public class MainActivity extends AppCompatActivity {
         public double accX, accY, accZ;
         float[][][] input;
         float[][] output;
+        boolean status;
+        int stepCount;
+        int tick;
+        int thresh;
+        boolean lock;
 
         AccelometerListener(){
             this.input = new float[1][sliceSize][3];
             this.output = new float[1][2];
+        }
+
+        public void init(){
+            this.stepCount = 0;
+            this.tick = 0;
+            this.thresh = 10;
+        }
+        public void init(int thresh){
+            this.stepCount = 0;
+            this.tick = 0;
+            this.thresh = thresh;
         }
 
         @Override
@@ -154,6 +156,33 @@ public class MainActivity extends AppCompatActivity {
 
             // Run the model.
             tflite.run(this.input, this.output);
+            float biggest = 0;
+            int biggestIndex = -1;
+            for(int i = 0;i<2;i++){
+                if(biggest < this.output[0][i]){
+                    biggest = this.output[0][i];
+                    biggestIndex = i;
+                }
+            }
+            if(!this.lock){
+                if(biggestIndex == 0 && this.status == false){
+                    this.status = true;
+                    this.stepCount++;
+                    this.lock = true;
+                }
+                if(biggestIndex == 1){
+                    this.status = false;
+                }
+            }
+            else{
+                if(this.tick < this.thresh){
+                    this.tick++;
+                }
+                else{
+                    this.tick = 0;
+                    this.lock = false;
+                }
+            }
         }
 
         @Override
