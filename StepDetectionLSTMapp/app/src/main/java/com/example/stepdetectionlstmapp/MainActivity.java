@@ -33,6 +33,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends AppCompatActivity {
@@ -56,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
     Interpreter stepDetectorLSTM;
     Interpreter motionClassifyLSTM;
     final int sliceSize= 30;
+    float[][][] motionClassifyInput;
+    float[][] motionClassifyOutput;
 
     // Variables for PDR
     float stepDist;
@@ -66,6 +70,40 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             pedestrian.walk(stepDist, gyroListener.azimuth);
             stepDisplay.setText(String.format("%.2f", pedestrian.x) + ", " + String.format("%.2f", pedestrian.y));
+        }
+    };
+
+    final Handler coordType2Handler = new Handler(){
+        public void handleMessage(Message msg){
+            float biggest = 0;
+            int biggestIndex = -1;
+            for(int i = 0;i<6;i++){
+                if(biggest < motionClassifyOutput[0][i]){
+                    biggest = motionClassifyOutput[0][i];
+                    biggestIndex = i;
+                }
+            }
+
+            switch(biggestIndex){
+                case 0:
+                    currentMotionDisplay.setText("stop");
+                    break;
+                case 1:
+                    currentMotionDisplay.setText("stopLeft");
+                    break;
+                case 2:
+                    currentMotionDisplay.setText("stopRight");
+                    break;
+                case 3:
+                    currentMotionDisplay.setText("move");
+                    break;
+                case 4:
+                    currentMotionDisplay.setText("moveLeft");
+                    break;
+                case 5:
+                    currentMotionDisplay.setText("moveRight");
+                    break;
+            }
         }
     };
 
@@ -86,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
         // Load ML model
         stepDetectorLSTM = getTfliteInterpreter("stepdetectLSTM.tflite");
         motionClassifyLSTM = getTfliteInterpreter("motionClassifyLSTM.tflite");
+        motionClassifyInput = new float[1][sliceSize][6];
+        motionClassifyOutput = new float[1][6];
 
         // Enable sensor.
         accelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -115,6 +155,35 @@ public class MainActivity extends AppCompatActivity {
                 pedestrian.generateLog();
             }
         });
+
+        // Motion Classify by LSTM
+        Timer scheduler = new Timer();
+        TimerTask task = new TimerTask(){
+            @Override
+            public void run() {
+                for(int i = 0;i<sliceSize - 1;i++){
+                    motionClassifyInput[0][i][0] = motionClassifyInput[0][i+1][0];
+                    motionClassifyInput[0][i][1] = motionClassifyInput[0][i+1][1];
+                    motionClassifyInput[0][i][2] = motionClassifyInput[0][i+1][2];
+                    motionClassifyInput[0][i][3] = motionClassifyInput[0][i+1][3];
+                    motionClassifyInput[0][i][4] = motionClassifyInput[0][i+1][4];
+                    motionClassifyInput[0][i][5] = motionClassifyInput[0][i+1][5];
+                }
+                motionClassifyInput[0][sliceSize - 1][0] = (float) accelListener.accX;
+                motionClassifyInput[0][sliceSize - 1][1] = (float) accelListener.accY;
+                motionClassifyInput[0][sliceSize - 1][2] = (float) accelListener.accZ;
+                motionClassifyInput[0][sliceSize - 1][3] = (float) gyroListener.rotX;
+                motionClassifyInput[0][sliceSize - 1][4] = (float) gyroListener.rotY;
+                motionClassifyInput[0][sliceSize - 1][5] = (float) gyroListener.rotZ;
+
+                motionClassifyLSTM.run(motionClassifyInput, motionClassifyOutput);
+
+                Message msg = coordType2Handler.obtainMessage();
+                coordType2Handler.sendMessage(msg);
+            }
+        };
+        scheduler.scheduleAtFixedRate(task, 0, 10);
+
     }
 
     // Functions related to loading ML model.
