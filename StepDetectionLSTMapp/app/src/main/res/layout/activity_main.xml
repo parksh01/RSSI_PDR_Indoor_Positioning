@@ -7,11 +7,11 @@
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/stepStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"
         android:textSize="48dp"
-        android:id="@+id/stepStatus"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -23,7 +23,6 @@
         android:layout_height="wrap_content"
         android:text="Run"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -35,5 +34,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/stepStatus" />
+
+    <Button
+        android:id="@+id/logGenButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LOG"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.example.stepdetectionlstmapp;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -9,18 +10,29 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.tensorflow.lite.Interpreter;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Timer;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends AppCompatActivity {
@@ -28,18 +40,31 @@ public class MainActivity extends AppCompatActivity {
     TextView stepDisplay;
     TextView rotvecDisplay;
     Button runButton;
+    Button logGenButton;
 
     // Sensors
     SensorManager accelManager;
     Sensor accelSensor;
     AccelometerListener accelListener;
-    SensorManager rotvecManager;
-    Sensor rotvecSensor;
-    RotVecListener rotvecListener;
+    SensorManager gyroManager;
+    Sensor gyroSensor;
+    GyroListener gyroListener;
 
     // Variables for ML based step detection.
     Interpreter tflite;
     final int sliceSize= 30;
+
+    // Variables for PDR
+    float stepDist;
+    Pedestrian pedestrian;
+
+    // Handler for PDR
+    final Handler stepDetectHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            pedestrian.walk(stepDist, gyroListener.azimuth);
+            stepDisplay.setText(String.format("%.2f", pedestrian.x) + ", " + String.format("%.2f", pedestrian.y));
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,27 +75,39 @@ public class MainActivity extends AppCompatActivity {
         stepDisplay = findViewById(R.id.stepStatus);
         rotvecDisplay = findViewById(R.id.rotvecDisplay);
 
+        // Set Step length;
+        pedestrian = new Pedestrian();
+        stepDist = 0.7f;
+
         // Load ML model
         tflite = getTfliteInterpreter("stepdetectLSTM.tflite");
 
         // Enable sensor.
         accelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         accelSensor = accelManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        accelListener = new AccelometerListener(stepDisplay);
+        accelListener = new AccelometerListener(stepDisplay, stepDetectHandler);
         accelManager.registerListener(accelListener, accelSensor, SensorManager.SENSOR_DELAY_GAME);
 
-        rotvecManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        rotvecSensor = rotvecManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        rotvecListener = new RotVecListener(rotvecDisplay);
-        rotvecManager.registerListener(rotvecListener, rotvecSensor, SensorManager.SENSOR_DELAY_GAME);
+        gyroManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        gyroSensor = gyroManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        gyroListener = new GyroListener(rotvecDisplay);
+        gyroManager.registerListener(gyroListener, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
 
         runButton = findViewById(R.id.runButton);
         runButton.setOnClickListener(new View.OnClickListener() {
-            Timer scheduler;
             @Override
             public void onClick(View view) {
                 accelListener.isStepDetectOn = !accelListener.isStepDetectOn;
-                rotvecListener.isRotVecDetectOn = !rotvecListener.isRotVecDetectOn;
+                gyroListener.isGyroOn = !gyroListener.isGyroOn;
+            }
+        });
+
+        logGenButton = findViewById(R.id.logGenButton);
+        logGenButton.setOnClickListener(new View.OnClickListener(){
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onClick(View view) {
+                pedestrian.generateLog();
             }
         });
     }
@@ -106,12 +143,14 @@ public class MainActivity extends AppCompatActivity {
 
         boolean isStepDetectOn;
         TextView display;
+        Handler handler;
 
-        AccelometerListener(TextView display){
+        AccelometerListener(TextView display, Handler handler){
             this.input = new float[1][sliceSize][3];
             this.output = new float[1][2];
             this.isStepDetectOn = false;
             this.display = display;
+            this.handler = handler;
         }
 
         public void init(){
@@ -153,10 +192,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 if(!this.lock){
+                    // If step is detected, do something.
                     if(biggestIndex == 0 && this.status == false){
                         this.status = true;
                         this.stepCount++;
-                        stepDisplay.setText(accelListener.stepCount + "");
+                        Message msg = handler.obtainMessage();
+                        handler.sendMessage(msg);
                         this.lock = true;
                     }
                     if(biggestIndex == 1){
@@ -181,38 +222,92 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class RotVecListener implements SensorEventListener{
-        public double rvX, rvY, rvZ, rvS;
+    private class GyroListener implements SensorEventListener{
+        public double rotX, rotY, rotZ;
         TextView display;
-        boolean isRotVecDetectOn;
-        private float[] mRotationMatrix;
-        private float[] mOrientation;
+        boolean isGyroOn;
         private double azimuth;
+        long timeBefore, timeAfter;
+        boolean isInit;
 
-        RotVecListener(TextView display){
+        GyroListener(TextView display){
             this.display = display;
-            this.isRotVecDetectOn = false;
-            mRotationMatrix = new float[16];
-            mRotationMatrix[ 0] = 1;
-            mRotationMatrix[ 4] = 1;
-            mRotationMatrix[ 8] = 1;
-            mRotationMatrix[12] = 1;
-            mOrientation = new float[3];
+            this.isGyroOn = false;
+            this.isInit = false;
+            rotX = 0.0f;
+            rotY = 0.0f;
+            rotZ = 0.0f;
         }
 
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
-            if(this.isRotVecDetectOn){
-                SensorManager.getRotationMatrixFromVector(mRotationMatrix ,sensorEvent.values);
-                SensorManager.getOrientation(mRotationMatrix, mOrientation);
-                azimuth = Math.toDegrees(mOrientation[0]) + 180;
-                display.setText(String.format("%.3f", azimuth));
+            if(this.isGyroOn){
+                if(!isInit){
+                    isInit = true;
+                    timeAfter = System.nanoTime();
+                    rotX = sensorEvent.values[0];
+                    rotY = sensorEvent.values[1];
+                    rotZ = sensorEvent.values[2];
+                }
+                else {
+                    timeBefore = timeAfter;
+                    timeAfter = System.nanoTime();
+                    rotX += sensorEvent.values[0] * ((timeAfter - timeBefore));
+                    rotY += sensorEvent.values[1] * ((timeAfter - timeBefore));
+                    rotZ += sensorEvent.values[2] * ((timeAfter - timeBefore));
+                    this.azimuth = Math.sqrt(rotY * rotY + rotZ * rotZ) / 1000000000;
+                    display.setText(String.format("%.3f", this.azimuth / Math.PI) + "pi");
+                }
             }
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int i) {
 
+        }
+    }
+
+    private class Pedestrian{
+        double x, y;
+        ArrayList<Double> xlog, ylog;
+        Pedestrian(){
+            this.x = 0.0f;
+            this.y = 0.0f;
+            this.xlog = new ArrayList<Double>();
+            this.ylog = new ArrayList<Double>();
+        }
+        void walk(float stepWidth, double azimuth){
+            x += Math.cos(azimuth) * stepWidth;
+            y += Math.sin(azimuth) * stepWidth;
+            xlog.add(x);
+            ylog.add(y);
+        }
+        void init(){
+            this.x = 0.0f;
+            this.y = 0.0f;
+            xlog.clear();
+            ylog.clear();
+        }
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        void generateLog(){
+            String filename = "LSTM_PDR - " + LocalDate.now() + "-" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH시 mm분 ss초")) + ".csv";
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), filename);
+            try{
+                if(!file.exists()){
+                    file.createNewFile();
+                }
+                FileWriter writer = new FileWriter(file, false);
+                String str = "x,y\n0.000,0.000\n";
+                for(int i=0;i<xlog.size();i++){
+                    str += (String.format("%.3f", xlog.get(i)) + ",");
+                    str += (String.format("%.3f", ylog.get(i)) + "\n");
+                }
+                writer.write(str);
+                writer.close();
+                Toast.makeText(getApplicationContext(), "LSTM_PDR Log Generated", Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
