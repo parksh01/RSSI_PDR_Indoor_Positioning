@@ -10,9 +10,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,35 +21,34 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Timer;
-import java.util.TimerTask;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends AppCompatActivity {
     // UI elements
-    TextView stepStatus;
+    TextView stepDisplay;
+    TextView rotvecDisplay;
     Button runButton;
 
     // Sensors
     SensorManager accelManager;
     Sensor accelSensor;
     AccelometerListener accelListener;
+    SensorManager rotvecManager;
+    Sensor rotvecSensor;
+    RotVecListener rotvecListener;
 
     // Variables for ML based step detection.
     Interpreter tflite;
     final int sliceSize= 30;
 
-    boolean isStepDetectOn = false;
-
-    final Handler coordType2Handler = new Handler(){
-        public void handleMessage(Message msg){
-            stepStatus.setText(accelListener.stepCount + "");
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Assign UI elements and functions
+        stepDisplay = findViewById(R.id.stepStatus);
+        rotvecDisplay = findViewById(R.id.rotvecDisplay);
 
         // Load ML model
         tflite = getTfliteInterpreter("stepdetectLSTM.tflite");
@@ -60,35 +56,21 @@ public class MainActivity extends AppCompatActivity {
         // Enable sensor.
         accelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         accelSensor = accelManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        accelListener = new AccelometerListener();
+        accelListener = new AccelometerListener(stepDisplay);
         accelManager.registerListener(accelListener, accelSensor, SensorManager.SENSOR_DELAY_GAME);
 
-        // Assign UI elements and functions
-        stepStatus = findViewById(R.id.stepStatus);
+        rotvecManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        rotvecSensor = rotvecManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        rotvecListener = new RotVecListener(rotvecDisplay);
+        rotvecManager.registerListener(rotvecListener, rotvecSensor, SensorManager.SENSOR_DELAY_GAME);
+
         runButton = findViewById(R.id.runButton);
         runButton.setOnClickListener(new View.OnClickListener() {
             Timer scheduler;
             @Override
             public void onClick(View view) {
-                isStepDetectOn = !isStepDetectOn;
-                if(isStepDetectOn){
-                    accelListener.init(22);
-                    scheduler = new Timer();
-                    TimerTask task = new TimerTask() {
-                        @Override
-                        public void run() {
-                            // Update UI element
-                            Message msg = coordType2Handler.obtainMessage();
-                            coordType2Handler.sendMessage(msg);
-                        }
-                    };
-                    scheduler.scheduleAtFixedRate(task, 0, 10);
-                }
-                else{
-                    if(scheduler != null){
-                        scheduler.cancel();
-                    }
-                }
+                accelListener.isStepDetectOn = !accelListener.isStepDetectOn;
+                rotvecListener.isRotVecDetectOn = !rotvecListener.isRotVecDetectOn;
             }
         });
     }
@@ -122,9 +104,14 @@ public class MainActivity extends AppCompatActivity {
         int thresh;
         boolean lock;
 
-        AccelometerListener(){
+        boolean isStepDetectOn;
+        TextView display;
+
+        AccelometerListener(TextView display){
             this.input = new float[1][sliceSize][3];
             this.output = new float[1][2];
+            this.isStepDetectOn = false;
+            this.display = display;
         }
 
         public void init(){
@@ -140,53 +127,91 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-            accX = event.values[0];
-            accY = event.values[1];
-            accZ = event.values[2];
+            if(this.isStepDetectOn){
+                accX = event.values[0];
+                accY = event.values[1];
+                accZ = event.values[2];
 
-            // Prepare input data for ML model.
-            for(int i = 0;i<sliceSize - 1;i++){
-                input[0][i][0] = input[0][i+1][0];
-                input[0][i][1] = input[0][i+1][1];
-                input[0][i][2] = input[0][i+1][2];
-            }
-            input[0][sliceSize - 1][0] = (float) this.accX;
-            input[0][sliceSize - 1][1] = (float) this.accY;
-            input[0][sliceSize - 1][2] = (float) this.accZ;
+                // Prepare input data for ML model.
+                for(int i = 0;i<sliceSize - 1;i++){
+                    input[0][i][0] = input[0][i+1][0];
+                    input[0][i][1] = input[0][i+1][1];
+                    input[0][i][2] = input[0][i+1][2];
+                }
+                input[0][sliceSize - 1][0] = (float) this.accX;
+                input[0][sliceSize - 1][1] = (float) this.accY;
+                input[0][sliceSize - 1][2] = (float) this.accZ;
 
-            // Run the model.
-            tflite.run(this.input, this.output);
-            float biggest = 0;
-            int biggestIndex = -1;
-            for(int i = 0;i<2;i++){
-                if(biggest < this.output[0][i]){
-                    biggest = this.output[0][i];
-                    biggestIndex = i;
+                // Run the model.
+                tflite.run(this.input, this.output);
+                float biggest = 0;
+                int biggestIndex = -1;
+                for(int i = 0;i<2;i++){
+                    if(biggest < this.output[0][i]){
+                        biggest = this.output[0][i];
+                        biggestIndex = i;
+                    }
                 }
-            }
-            if(!this.lock){
-                if(biggestIndex == 0 && this.status == false){
-                    this.status = true;
-                    this.stepCount++;
-                    this.lock = true;
-                }
-                if(biggestIndex == 1){
-                    this.status = false;
-                }
-            }
-            else{
-                if(this.tick < this.thresh){
-                    this.tick++;
+                if(!this.lock){
+                    if(biggestIndex == 0 && this.status == false){
+                        this.status = true;
+                        this.stepCount++;
+                        stepDisplay.setText(accelListener.stepCount + "");
+                        this.lock = true;
+                    }
+                    if(biggestIndex == 1){
+                        this.status = false;
+                    }
                 }
                 else{
-                    this.tick = 0;
-                    this.lock = false;
+                    if(this.tick < this.thresh){
+                        this.tick++;
+                    }
+                    else{
+                        this.tick = 0;
+                        this.lock = false;
+                    }
                 }
             }
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+    }
+
+    private class RotVecListener implements SensorEventListener{
+        public double rvX, rvY, rvZ, rvS;
+        TextView display;
+        boolean isRotVecDetectOn;
+        private float[] mRotationMatrix;
+        private float[] mOrientation;
+        private double azimuth;
+
+        RotVecListener(TextView display){
+            this.display = display;
+            this.isRotVecDetectOn = false;
+            mRotationMatrix = new float[16];
+            mRotationMatrix[ 0] = 1;
+            mRotationMatrix[ 4] = 1;
+            mRotationMatrix[ 8] = 1;
+            mRotationMatrix[12] = 1;
+            mOrientation = new float[3];
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            if(this.isRotVecDetectOn){
+                SensorManager.getRotationMatrixFromVector(mRotationMatrix ,sensorEvent.values);
+                SensorManager.getOrientation(mRotationMatrix, mOrientation);
+                azimuth = Math.toDegrees(mOrientation[0]) + 180;
+                display.setText(String.format("%.3f", azimuth));
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int i) {
 
         }
     }
