@@ -4,19 +4,15 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.hardware.Sensor;
-import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,8 +22,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -117,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
         buttonSwitchToggle = false;
 
-        tflite = getTfliteInterpreter("converted_model.tflite");
+        tflite = getTfliteInterpreter("motionClassifyLSTM.tflite");
         input = new float[1][sliceSize][6];
         output = new float[1][6];
     }

@@ -38,7 +38,8 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     // UI elements
     TextView stepDisplay;
-    TextView rotvecDisplay;
+    TextView angleDisplay;
+    TextView currentMotionDisplay;
     Button runButton;
     Button logGenButton;
 
@@ -46,12 +47,14 @@ public class MainActivity extends AppCompatActivity {
     SensorManager accelManager;
     Sensor accelSensor;
     AccelometerListener accelListener;
+
     SensorManager gyroManager;
     Sensor gyroSensor;
     GyroListener gyroListener;
 
-    // Variables for ML based step detection.
-    Interpreter tflite;
+    // Variables for ML based step detection and motion classification.
+    Interpreter stepDetectorLSTM;
+    Interpreter motionClassifyLSTM;
     final int sliceSize= 30;
 
     // Variables for PDR
@@ -73,24 +76,26 @@ public class MainActivity extends AppCompatActivity {
 
         // Assign UI elements and functions
         stepDisplay = findViewById(R.id.stepStatus);
-        rotvecDisplay = findViewById(R.id.rotvecDisplay);
+        angleDisplay = findViewById(R.id.rotvecDisplay);
+        currentMotionDisplay = findViewById(R.id.currentMotionDisplay);
 
         // Set Step length;
         pedestrian = new Pedestrian();
         stepDist = 0.7f;
 
         // Load ML model
-        tflite = getTfliteInterpreter("stepdetectLSTM.tflite");
+        stepDetectorLSTM = getTfliteInterpreter("stepdetectLSTM.tflite");
+        motionClassifyLSTM = getTfliteInterpreter("motionClassifyLSTM.tflite");
 
         // Enable sensor.
         accelManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         accelSensor = accelManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        accelListener = new AccelometerListener(stepDisplay, stepDetectHandler);
+        accelListener = new AccelometerListener(stepDisplay, stepDetectHandler, stepDetectorLSTM);
         accelManager.registerListener(accelListener, accelSensor, SensorManager.SENSOR_DELAY_GAME);
 
         gyroManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         gyroSensor = gyroManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        gyroListener = new GyroListener(rotvecDisplay);
+        gyroListener = new GyroListener(angleDisplay);
         gyroManager.registerListener(gyroListener, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
 
         runButton = findViewById(R.id.runButton);
@@ -133,24 +138,26 @@ public class MainActivity extends AppCompatActivity {
 
     private class AccelometerListener implements SensorEventListener {
         public double accX, accY, accZ;
-        float[][][] input;
-        float[][] output;
+        float[][][] stepDetectInput;
+        float[][] stepDetectOutput;
         boolean status;
         int stepCount;
         int tick;
         int thresh;
         boolean lock;
+        Interpreter tfmodel;
 
         boolean isStepDetectOn;
         TextView display;
         Handler handler;
 
-        AccelometerListener(TextView display, Handler handler){
-            this.input = new float[1][sliceSize][3];
-            this.output = new float[1][2];
+        AccelometerListener(TextView display, Handler handler, Interpreter tfmodel){
+            this.stepDetectInput = new float[1][sliceSize][3];
+            this.stepDetectOutput = new float[1][2];
             this.isStepDetectOn = false;
             this.display = display;
             this.handler = handler;
+            this.tfmodel = tfmodel;
         }
 
         public void init(){
@@ -173,21 +180,21 @@ public class MainActivity extends AppCompatActivity {
 
                 // Prepare input data for ML model.
                 for(int i = 0;i<sliceSize - 1;i++){
-                    input[0][i][0] = input[0][i+1][0];
-                    input[0][i][1] = input[0][i+1][1];
-                    input[0][i][2] = input[0][i+1][2];
+                    stepDetectInput[0][i][0] = stepDetectInput[0][i+1][0];
+                    stepDetectInput[0][i][1] = stepDetectInput[0][i+1][1];
+                    stepDetectInput[0][i][2] = stepDetectInput[0][i+1][2];
                 }
-                input[0][sliceSize - 1][0] = (float) this.accX;
-                input[0][sliceSize - 1][1] = (float) this.accY;
-                input[0][sliceSize - 1][2] = (float) this.accZ;
+                stepDetectInput[0][sliceSize - 1][0] = (float) this.accX;
+                stepDetectInput[0][sliceSize - 1][1] = (float) this.accY;
+                stepDetectInput[0][sliceSize - 1][2] = (float) this.accZ;
 
                 // Run the model.
-                tflite.run(this.input, this.output);
+                tfmodel.run(this.stepDetectInput, this.stepDetectOutput);
                 float biggest = 0;
                 int biggestIndex = -1;
                 for(int i = 0;i<2;i++){
-                    if(biggest < this.output[0][i]){
-                        biggest = this.output[0][i];
+                    if(biggest < this.stepDetectOutput[0][i]){
+                        biggest = this.stepDetectOutput[0][i];
                         biggestIndex = i;
                     }
                 }
