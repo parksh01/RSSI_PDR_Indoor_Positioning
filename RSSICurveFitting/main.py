@@ -21,11 +21,11 @@ filename = str()
 if beaconNum == '4':
     filename = 'inputdata4/'
 else:
-    filename = 'inputdata3/'
+    filename = 'inputdata5/'
 filename += 'Beacon 0' + beaconNum
 
 # read files and get rssi values
-for i in range(7):
+for i in range(meters):
     with open(filename + '/B' + beaconNum + ' ' + str(i + 1) + front_or_back + '.csv', 'r') as f:
         line = None
         avg = 0
@@ -85,7 +85,7 @@ print('avg_kf :', rssi_avg_kf)
 
 rssi_to_dist_raw = []
 rssi_to_dist_raw_error = []
-for i in range(7):
+for i in range(meters):
       rssi_to_dist_raw.append(round(10 ** ((popt1[1] - rssi_avg_raw[i])/(10*popt1[0])), 3))
       rssi_to_dist_raw_error.append(np.absolute(round(float(i + 1) - rssi_to_dist_raw[i], 3)))
 print('dist(raw) :', rssi_to_dist_raw)
@@ -96,7 +96,7 @@ print()
 
 rssi_to_dist_kf = []
 rssi_to_dist_kf_error = []
-for i in range(7):
+for i in range(meters):
       rssi_to_dist_kf.append(round(10 ** ((popt2[1] - rssi_avg_kf[i])/(10*popt2[0])), 3))
       rssi_to_dist_kf_error.append(np.absolute(round(float(i + 1) - rssi_to_dist_kf[i], 3)))
 print('dist(kf) :', rssi_to_dist_kf)
@@ -110,29 +110,13 @@ ax.set_xlabel('meters')
 ax.set_ylabel('RSSI')
 
 if kf_or_raw == 'kf':
-    violin = ax.violinplot(rssi_y_kf, positions=range(1, 7 + 1))
-    plt.plot(range(1, 7 + 1), rssi_avg_kf, 'r^', label='rssi_avg_kf')
-    plt.plot(range(1, 7 + 1), func(range(1, 7 + 1), *popt2), label='curve(avg)', color='r')
+    violin = ax.violinplot(rssi_y_kf, positions=range(1, meters + 1))
+    plt.plot(range(1, meters + 1), rssi_avg_kf, 'r^', label='rssi_avg_kf')
+    plt.plot(range(1, meters + 1), func(range(1, meters + 1), *popt2), label='curve(avg)', color='r')
 elif kf_or_raw == 'raw':
-    violin = ax.violinplot(rssi_y_raw, positions=range(1, 7 + 1))
-    plt.plot(range(1, 7 + 1), rssi_avg_raw, 'r^', label='rssi_avg_raw')
-    plt.plot(range(1, 7 + 1), func(range(1, 7 + 1), *popt1), label='curve(avg)', color='r')
-
-plt.legend()
-plt.show()
-
-fig, ax = plt.subplots()
-ax.set_xlabel('meters')
-ax.set_ylabel('measured')
-measured = [1.1, 1.9, 2.5, 4.4, 5.5, 6.6, 7.7]
-aspected = [1, 2, 3, 4, 5, 6, 7]
-error = []
-for i in range(7):
-    error.append(abs(measured[i] - aspected[i]))
-plt.plot(range(1, 7+1), measured, 'r-', label='measured')
-plt.plot(range(1, 7+1), aspected, 'b-', label='aspected')
-for i in range(7):
-    plt.text(i + 1, measured[i] + 0.5, 'error : %.3f' %error[i], fontsize = 9, color = 'green', horizontalalignment = 'center', verticalalignment = 'bottom')
+    violin = ax.violinplot(rssi_y_raw, positions=range(1, meters + 1))
+    plt.plot(range(1, meters + 1), rssi_avg_raw, 'r^', label='rssi_avg_raw')
+    plt.plot(range(1, meters + 1), func(range(1, meters + 1), *popt1), label='curve(avg)', color='r')
 
 plt.legend()
 plt.show()
