@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     // Variables for PDR
     float stepDist;
     Pedestrian pedestrian;
+    boolean isStop;
 
     // Handler for PDR
     final Handler stepDetectHandler = new Handler() {
@@ -88,21 +89,27 @@ public class MainActivity extends AppCompatActivity {
             switch(biggestIndex){
                 case 0:
                     currentMotionDisplay.setText("stop");
+                    isStop = true;
                     break;
                 case 1:
                     currentMotionDisplay.setText("stopLeft");
+                    isStop = true;
                     break;
                 case 2:
                     currentMotionDisplay.setText("stopRight");
+                    isStop = true;
                     break;
                 case 3:
                     currentMotionDisplay.setText("move");
+                    isStop = false;
                     break;
                 case 4:
                     currentMotionDisplay.setText("moveLeft");
+                    isStop = false;
                     break;
                 case 5:
                     currentMotionDisplay.setText("moveRight");
+                    isStop = false;
                     break;
             }
         }
@@ -284,11 +291,13 @@ public class MainActivity extends AppCompatActivity {
                 if(!this.lock){
                     // If step is detected, do something.
                     if(biggestIndex == 0 && this.status == false){
-                        this.status = true;
-                        this.stepCount++;
-                        Message msg = handler.obtainMessage();
-                        handler.sendMessage(msg);
-                        this.lock = true;
+                        if(!isStop){
+                            this.status = true;
+                            this.stepCount++;
+                            Message msg = handler.obtainMessage();
+                            handler.sendMessage(msg);
+                            this.lock = true;
+                        }
                     }
                     if(biggestIndex == 1){
                         this.status = false;
