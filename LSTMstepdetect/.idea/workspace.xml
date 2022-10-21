@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b2b4a95d-78cd-4c77-b665-872c9bcac33d" name="변경" comment="변경">
-      <change beforePath="$PROJECT_DIR$/../LSTMmotionClassify/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../LSTMmotionClassify/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trainResultVisual.py" beforeDir="false" afterPath="$PROJECT_DIR$/trainResultVisual.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../RSSICurveFitting/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../RSSICurveFitting/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
