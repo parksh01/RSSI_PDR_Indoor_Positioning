@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
                     angleX += sensorEvent.values[0] * ((timeAfter - timeBefore));
                     angleY += sensorEvent.values[1] * ((timeAfter - timeBefore));
                     angleZ += sensorEvent.values[2] * ((timeAfter - timeBefore));
-                    this.azimuth = Math.sqrt(rotY * rotY + rotZ * rotZ) / 1000000000;
+                    this.azimuth = Math.sqrt(angleY * angleY + angleZ * angleZ) / 1000000000;
                     display.setText(String.format("%.3f", this.azimuth / Math.PI) + "pi");
                 }
             }
