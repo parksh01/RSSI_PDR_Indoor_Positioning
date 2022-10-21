@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // Handler for UI element (Motion Classify)
     final Handler coordType2Handler = new Handler(){
         public void handleMessage(Message msg){
             float biggest = 0;
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         gyroListener = new GyroListener(angleDisplay);
         gyroManager.registerListener(gyroListener, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
 
+        // Implement Run button
         runButton = findViewById(R.id.runButton);
         runButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -147,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Implement Log generation button
         logGenButton = findViewById(R.id.logGenButton);
         logGenButton.setOnClickListener(new View.OnClickListener(){
             @RequiresApi(api = Build.VERSION_CODES.O)
@@ -161,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
         TimerTask task = new TimerTask(){
             @Override
             public void run() {
+                // Preparing input data
                 for(int i = 0;i<sliceSize - 1;i++){
                     motionClassifyInput[0][i][0] = motionClassifyInput[0][i+1][0];
                     motionClassifyInput[0][i][1] = motionClassifyInput[0][i+1][1];
@@ -176,8 +180,17 @@ public class MainActivity extends AppCompatActivity {
                 motionClassifyInput[0][sliceSize - 1][4] = (float) gyroListener.rotY;
                 motionClassifyInput[0][sliceSize - 1][5] = (float) gyroListener.rotZ;
 
+                // Then run the neural network
                 motionClassifyLSTM.run(motionClassifyInput, motionClassifyOutput);
 
+                Log.d("motionOutput", accelListener.accX + ", "
+                        + accelListener.accY + ", "
+                        + accelListener.accZ + ", "
+                        + gyroListener.rotX + ", "
+                        + gyroListener.rotY + ", "
+                        + gyroListener.rotZ);
+
+                // After getting the result, update the UI element.
                 Message msg = coordType2Handler.obtainMessage();
                 coordType2Handler.sendMessage(msg);
             }
@@ -205,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
+    // Sensor listener for Accelometer
     private class AccelometerListener implements SensorEventListener {
         public double accX, accY, accZ;
         float[][][] stepDetectInput;
@@ -298,8 +312,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Listener for Gyroscope
     private class GyroListener implements SensorEventListener{
         public double rotX, rotY, rotZ;
+        public double angleX, angleY, angleZ;
         TextView display;
         boolean isGyroOn;
         private double azimuth;
@@ -318,19 +334,22 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
             if(this.isGyroOn){
+                rotX = sensorEvent.values[0];
+                rotY = sensorEvent.values[1];
+                rotZ = sensorEvent.values[2];
                 if(!isInit){
                     isInit = true;
                     timeAfter = System.nanoTime();
-                    rotX = sensorEvent.values[0];
-                    rotY = sensorEvent.values[1];
-                    rotZ = sensorEvent.values[2];
+                    angleX = rotX;
+                    angleY = rotY;
+                    angleZ = rotZ;
                 }
                 else {
                     timeBefore = timeAfter;
                     timeAfter = System.nanoTime();
-                    rotX += sensorEvent.values[0] * ((timeAfter - timeBefore));
-                    rotY += sensorEvent.values[1] * ((timeAfter - timeBefore));
-                    rotZ += sensorEvent.values[2] * ((timeAfter - timeBefore));
+                    angleX += sensorEvent.values[0] * ((timeAfter - timeBefore));
+                    angleY += sensorEvent.values[1] * ((timeAfter - timeBefore));
+                    angleZ += sensorEvent.values[2] * ((timeAfter - timeBefore));
                     this.azimuth = Math.sqrt(rotY * rotY + rotZ * rotZ) / 1000000000;
                     display.setText(String.format("%.3f", this.azimuth / Math.PI) + "pi");
                 }
@@ -343,6 +362,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Class for pedestrian.
+    // keeps variables related to coordinate and implemented method related to PDR
     private class Pedestrian{
         double x, y;
         ArrayList<Double> xlog, ylog;
