@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 class Beacon:
-    def __init__(self, addr, A_front, n_front, A_back, n_back, isBack, x, y):
+    def __init__(self, addr, A_front, n_front, A_back, n_back, isBack, x, y, z):
         self.addr = addr
         self.A_front = A_front
         self.n_front = n_front
@@ -13,6 +13,7 @@ class Beacon:
         self.isBack = isBack
         self.x = x
         self.y = y
+        self.z = z
     def getDist(self, rssi):
         if not self.isBack:
             return 10**((rssi - self.A_front)/(-10 * self.n_front))
@@ -26,19 +27,18 @@ def errorRatio(x1, x2, xerror1, xerror2):
     return (x1*xerror2 + x2*xerror1)/(xerror1+xerror2)
 
 # pre defined variables (beacon info and log file locations)
-foldername = 'Measure20220804/'
+foldername = 'Measure20221022/'
 filename = 'c'
 beacons = []
 
 # start of algorithm
+beacons.append(Beacon('A81B6AAE5FF6', -53.715, 2.021, -66.697, 0.924, False, x=0.0, y=0.0, z=0.0)) #  0,  0, 0
+beacons.append(Beacon('A81B6AAE4C6B', -52.703, 1.956, -62.392, 1.627, False, x=5.0, y=0.0, z=0.0)) #  U,  0, 0
+beacons.append(Beacon('A81B6AAE5260', -54.065, 1.751, -64.114, 1.565, True, x=2.5, y=5.0, z=0.0))  # Vx, Vy, 0
 measureType = input("type? 1 / 2 / 3 : ")
-beacons.append(Beacon('A81B6AAE5FF6', -64.44, 1.569, -66.028, 1.071, False, x=0.0, y=0.0))
-beacons.append(Beacon('A81B6AAE4C6B', -59.717, 1.769, -61.764, 0.967, False, x=5.0, y=0.0))
-beacons.append(Beacon('A81B6AAE5260', -58.582, 1.837, -60.356, 1.709, True, x=0.0, y=5.0))
 if measureType == '1':
     foldername += '직각'
 elif measureType == '2':
-    beacons[2].x = 2.5
     foldername += '정삼각형'
 elif measureType == '3':
     beacons[0].isBack = True
@@ -47,7 +47,7 @@ elif measureType == '3':
     beacons.append(Beacon('606405D13F7E', -57.781, 1.61, -50.846, 1.7, False, x=5.0, y=5.0))
     foldername += '4beacons'
 
-coord = [beacons[1].x, beacons[2].y]
+coord = [5.0, 5.0]
 
 beaconRSSI = []
 beaconDist = []
@@ -58,7 +58,7 @@ for i in range(1, int(coord[1])):
         # processing coordinate (j, i)
         beaconDistTemp = []
         beaconNum = -1
-        x, y = [], []
+        x, y, z = [], [], []
 
         # First, get RSSI and distance info from each beacons.
         for beaconInfo in beacons:
