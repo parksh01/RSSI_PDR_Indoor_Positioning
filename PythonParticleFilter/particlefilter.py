@@ -1,6 +1,7 @@
 import csvopen
 import random
 import math
+import matplotlib.pyplot as plt
 
 def get_median(data):
     data = sorted(data)
@@ -45,7 +46,6 @@ def pf(measured, particleCount, measureRange):
                 w[i] = 0.0
 
         # Random select particles by their weights
-        print(w)
         particle_num = (random.choices(range(particleCount), weights=w, k=particleCount))
         result.append(particle[max(particle_num, key=particle_num.count)])
 
@@ -57,10 +57,20 @@ def pf(measured, particleCount, measureRange):
 
     return result
 
-
-
-val = csvopen.readcsv('testcase/Distance Log 2,2.csv')
+val = csvopen.readcsv('testcase/c11.csv')
 val = csvopen.locateCoordinate(val, 5)
 pfvalue = pf(val, 1000, 5)
-x = 0.0
-y = 0.0
+
+x = []
+y = []
+for i in pfvalue:
+    x.append(i[0])
+    y.append(i[1])
+
+print(x)
+print(y)
+
+plt.scatter(x, y, s=1, label='pf')
+plt.scatter(2, 2, s=5, label='expected')
+plt.legend()
+plt.show()
