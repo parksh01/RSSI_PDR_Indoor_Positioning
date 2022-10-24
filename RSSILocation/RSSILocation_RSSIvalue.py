@@ -32,9 +32,9 @@ filename = 'c'
 beacons = []
 
 # start of algorithm
-beacons.append(Beacon('A81B6AAE5FF6', -53.715, 2.021, -66.697, 0.924, False, x=0.0, y=0.0, z=0.0)) #  0,  0, 0
-beacons.append(Beacon('A81B6AAE4C6B', -52.703, 1.956, -62.392, 1.627, False, x=5.0, y=0.0, z=0.0)) #  U,  0, 0
-beacons.append(Beacon('A81B6AAE5260', -54.065, 1.751, -64.114, 1.565, True, x=2.5, y=5.0, z=0.0))  # Vx, Vy, 0
+beacons.append(Beacon('A81B6AAE5FF6', -53.715, 2.021, -66.697, 0.924, False, x=0.0, y=5.0, z=0.0))
+beacons.append(Beacon('A81B6AAE4C6B', -52.703, 1.956, -62.392, 1.627, True, x=2.5, y=0.0, z=0.0))
+beacons.append(Beacon('A81B6AAE5260', -54.065, 1.751, -64.114, 1.565, False, x=5.0, y=5.0, z=0.0))
 measureType = input("type? 1 / 2 / 3 : ")
 if measureType == '1':
     foldername += '직각'
@@ -81,17 +81,15 @@ for i in range(1, int(coord[1])):
 
         # then calculate the coordinate.
         if measureType == '1': # 직각삼각형 배열
-            """
-            x.append(((beaconDistTemp[1] ** 2) - (beaconDistTemp[0] ** 2) - (float(coord[0]) ** 2)) / (-2 * float(coord[0])))
-            y.append(((beaconDistTemp[2] ** 2) - (beaconDistTemp[0] ** 2) - (float(coord[1]) ** 2)) / (-2 * float(coord[1])))
-            x.append(abs(coord[0] - (abs((beaconDistTemp[1] ** 2) - (y[0] ** 2)) ** 0.5)))
-            y.append(abs(coord[1] - (abs((beaconDistTemp[2] ** 2) - (x[0] ** 2)) ** 0.5)))
-            """
             x.append((beaconDistTemp[0]**2 - beaconDistTemp[1]**2 + beacons[1].x**2)/(2*beacons[1].x))
             y.append((beaconDistTemp[0]**2 - beaconDistTemp[2]**2 + beacons[2].x**2 + beacons[2].y**2 - (2*beacons[2].x*x[0]))/(2*beacons[2].y))
         elif measureType == '2': # 이등변삼각형 배열
+            """
             x.append((beaconDistTemp[0]**2 - beaconDistTemp[1]**2 + beacons[1].x**2)/(2*beacons[1].x))
             y.append((beaconDistTemp[0]**2 - beaconDistTemp[2]**2 + beacons[2].x**2 + beacons[2].y**2 - (2*beacons[2].x*x[0]))/(2*beacons[2].y))
+            """
+            x.append((beaconDistTemp[2]**2 - beaconDistTemp[0]**2 - beacons[2].x**2)/(-2 * beacons[2].x))
+            y.append((beaconDistTemp[2]**2 - beaconDistTemp[1]**2 + (2*beacons[2].x - 2*beacons[1].x)*x[0] - beacons[2].x**2 + beacons[1].x**2 - beacons[2].y**2)/(-2 * beacons[2].y))
         elif measureType == '3': # 직사각형 배열
             x.append((math.pow(beaconDistTemp[1], 2.0) - math.pow(beaconDistTemp[0],2.0) - math.pow(coord[0],2.0))/(-2 * coord[0]))
             y.append(math.sqrt(abs(beaconDistTemp[0]**2 - x[0]**2)))
@@ -104,14 +102,7 @@ for i in range(1, int(coord[1])):
 
             y.append((math.pow(beaconDistTemp[3], 2.0) - math.pow(beaconDistTemp[1],2.0) - math.pow(coord[1],2.0))/(-2 * coord[1]))
             x.append(math.sqrt(abs(beaconDistTemp[1]**2 - y[3]**2)) + coord[0])
-            """
-            y.append((beaconDistTemp[2]**2 - beaconDistTemp[0]**2 - float(coord[1])**2)/(-2 * float(coord[1])))
-            x.append(abs(beaconDistTemp[3]**2 - (y[0] - float(coord[1]))**2)**0.5 + float(coord[0]))
 
-            x.append((beaconDistTemp[3]**2 - beaconDistTemp[2]**2 - float(coord[0])**2)/(-2 * float(coord[0])))
-            y.append(abs(beaconDistTemp[0]**2 - x[1]**2)**0.5)
-            """
-        
         xcoord, ycoord = np.average(x), np.average(y)
         print('(' + str(j) + ', ' + str(i) + ')')
         print('측정:(' + str(round(xcoord, 3)) + ',' +  str(round(ycoord, 3)) + ')')
