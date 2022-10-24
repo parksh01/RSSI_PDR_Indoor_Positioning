@@ -2,6 +2,17 @@ import csvopen
 import random
 import math
 import matplotlib.pyplot as plt
+import numpy as np
+
+def printError(distErrorX, distErrorY, keyword):
+    print('평균 오차 : (' + str(round(np.average(distErrorX), 3)) + ',' + str(round(np.average(distErrorY), 3)) + ') / ' + '표준편차 : (' + str(round(np.std(distErrorX), 3)) + ',' + str(round(np.std(distErrorY), 3)) + ')')
+
+def get_average(data):
+    sum, index = 0, 0
+    for i in data:
+        sum += i
+        index += 1
+    return float(sum)/float(index)
 
 def get_median(data):
     data = sorted(data)
@@ -14,7 +25,7 @@ def get_normalpdf(particle_coord, measured_data):
     val *= math.exp(-1 * (particle_coord - measured_data)**2 / (2 * sigma**2))
     return val
 
-def pf(measured, particleCount, measureRange):
+def pf(measured, particleCount, measureRange, moveRange):
     # particle : [x, y, weight]
     particle = []
     result = []
@@ -25,8 +36,8 @@ def pf(measured, particleCount, measureRange):
     for coord in measured:
         # Prediction
         for i in range(particleCount):
-            particle[i][0] += (random.random()*0.5 - 0.25)
-            particle[i][1] += (random.random()*0.5 - 0.25)
+            particle[i][0] += (random.random()*moveRange - moveRange/2.0)
+            particle[i][1] += (random.random()*moveRange - moveRange/2.0)
             particle[i][2] = 0.0
 
         # Update
@@ -57,20 +68,43 @@ def pf(measured, particleCount, measureRange):
 
     return result
 
-val = csvopen.readcsv('testcase/c11.csv')
-val = csvopen.locateCoordinate(val, 5)
-pfvalue = pf(val, 1000, 5)
+distErrorX, distErrorY = [], []
+filtCoordX, filtCoordY = [], []
 
-x = []
-y = []
-for i in pfvalue:
-    x.append(i[0])
-    y.append(i[1])
+for i in range(1, 5):
+    for j in range(1, 5):
+        testcasePath = 'testcase/c' + str(j) + str(i) + '.csv'
+        val = csvopen.readcsv(testcasePath)
+        val = csvopen.locateCoordinate(val, 5)
+        pfvalue = pf(val, 1000, 5, 0.2)
 
-print(x)
-print(y)
+        x = []
+        y = []
+        for n in pfvalue:
+            x.append(n[0])
+            y.append(n[1])
 
-plt.scatter(x, y, s=1, label='pf')
-plt.scatter(2, 2, s=5, label='expected')
+        x_avg, y_avg = get_average(x), get_average(y)
+
+        print('current position : ' + str(j) + ',' + str(i))
+        print('측정:(' + str(round(x_avg, 3)) + ',' + str(round(y_avg, 3)) + ')')
+        print('오차:(' + str(round(abs(x_avg - j), 3)) + ',' + str(round(abs(y_avg - j), 3)) + ')')
+        filtCoordX.append(x_avg)
+        filtCoordY.append(y_avg)
+        distErrorX.append(abs(x_avg - j))
+        distErrorY.append(abs(y_avg - i))
+        """
+        plt.scatter(x, y, s=1, label='particles')
+        plt.scatter(j, i, s=5, label='expected')
+        plt.scatter(x_avg, y_avg, s=10, label='filtered')
+        plt.legend()
+        plt.show()
+        """
+printError(distErrorX, distErrorY, 'avg')
+
+plt.scatter(filtCoordX, filtCoordY, s=5, label='filtered')
+plt.scatter([1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4], [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4], s=5, label='expected')
 plt.legend()
 plt.show()
+
+
