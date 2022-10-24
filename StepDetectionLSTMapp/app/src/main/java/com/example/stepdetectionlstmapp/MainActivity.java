@@ -289,7 +289,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 if(!this.lock){
-                    // If step is detected, do something.
+                    // If step is detected, lock the step detection for some ticks.
+                    // It will prevent double detection.
                     if(biggestIndex == 0 && this.status == false){
                         if(!isStop){
                             this.status = true;

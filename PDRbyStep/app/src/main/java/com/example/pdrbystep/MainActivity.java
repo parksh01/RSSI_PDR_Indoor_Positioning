@@ -284,7 +284,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             currentAngle += ((prevAngleVel + currentAngleVel) * ((timeAfter - timeBefore)/1000000000) / 2.0) * (2.0/1.8);
             currentAngleDisplay.setText(String.format("%.3f", currentAngle) + "pi");
         }
-
     }
 
     @Override
