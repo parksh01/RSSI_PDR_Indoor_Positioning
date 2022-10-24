@@ -31,7 +31,7 @@ public class LogGenerator {
     int size;
     int dataCollected;
     int timeInterval;
-    ParticleFilter pf = new ParticleFilter(1000, 0.3);;
+    ParticleFilter pf = new ParticleFilter(1000, 0.2);
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public LogGenerator(int size, int timeInterval) {
@@ -166,6 +166,7 @@ public class LogGenerator {
         scheduler.cancel();
     }
 
+    // Generate log file
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void generateDistanceLog(ListItemAdapter adapter){
         // make new file
@@ -216,6 +217,7 @@ public class LogGenerator {
         }
     }
 
+    // clear the log
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void clear() {
         startTime = null;

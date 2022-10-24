@@ -82,12 +82,7 @@ public class ParticleFilter {
 
         // Resampling
         Collections.sort(particles, Collections.reverseOrder());
-        /*
-        // While resampling, weights smaller than median will be discarded
-        for(int i=particles.size() - 1;particleCount/2 < i;i--){
-            particles.remove(i);
-        }
-        */
+
         // Filtered value will be the particle's coordination which has biggest weight.
         val[0] = particles.get(0).x;
         val[1] = particles.get(0).y;
@@ -104,12 +99,6 @@ public class ParticleFilter {
     }
 
     private double giveWeight(Particle particle, double[] inputCoordinate){
-        /*
-        double sigma = 0.5;
-        double px = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * (Math.exp(-1 * Math.pow(particle.x - inputCoordinate[0], 2.0) / (2 * Math.pow(sigma, 2.0))));
-        double py = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * (Math.exp(-1 * Math.pow(particle.y - inputCoordinate[1], 2.0) / (2 * Math.pow(sigma, 2.0))));
-        return px*py;
-        */
         return (1.0 / (Math.sqrt(Math.pow(particle.x - inputCoordinate[0], 2.0) + Math.pow(particle.y - inputCoordinate[1], 2.0))));
     }
 

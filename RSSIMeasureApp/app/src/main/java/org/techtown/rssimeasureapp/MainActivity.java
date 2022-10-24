@@ -60,16 +60,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Required Permission : Location, File Write, File Read
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                MY_PERMISSIONS_REQUEST_LOCATION);
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                MODE_PRIVATE);
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                MODE_PRIVATE
-                );
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MODE_PRIVATE);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MODE_PRIVATE);
 
         // Android 12 Requires additional permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -163,25 +156,18 @@ public class MainActivity extends AppCompatActivity {
                             float RSSItoDist_n_value_back = Float.parseFloat(beaconList.get(currentBeacon)[4]);
                             float RSSItoDist_coordX = 0;
                             float RSSItoDist_coordY = 0;
-                            if(beaconList.get(currentBeacon).length == 6){
-                                // if the beacon is at (0, 0)
-                                RSSItoDist_coordX = 0;
-                                RSSItoDist_coordY = 0;
-                            }
-                            else if(beaconList.get(currentBeacon).length == 7){
-                                // if the beacon is at (U, 0)
-                                RSSItoDist_coordX = Float.parseFloat(beaconList.get(currentBeacon)[6]);
-                                RSSItoDist_coordY = 0;
-                            }
-                            else if(beaconList.get(currentBeacon).length == 8){
-                                // if the beacon is at (Vx, Vy)
+                            if(beaconList.get(currentBeacon).length == 8){
+                                // Get the coordinate of beacon location.
                                 RSSItoDist_coordX = Float.parseFloat(beaconList.get(currentBeacon)[6]);
                                 RSSItoDist_coordY = Float.parseFloat(beaconList.get(currentBeacon)[7]);
                             }
                             boolean isBack = false;
+                            // When beacon is ahead of person
                             if(beaconList.get(currentBeacon)[5].equals("1")){
                                 isBack = false;
-                            } else if (beaconList.get(currentBeacon)[5].equals("0")) {
+                            }
+                            // When beacon is behind of person
+                            else if (beaconList.get(currentBeacon)[5].equals("0")) {
                                 isBack = true;
                             }
 
@@ -260,8 +246,8 @@ public class MainActivity extends AppCompatActivity {
         logGen.stopLogging();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     // generate log file
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void onLogClicked(View view) {
         logGen.generateBeaconLog(adapter);
         logGen.generateDistanceLog(adapter);
