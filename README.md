@@ -35,6 +35,8 @@ RSSILocation
 
 RSSIMeasureApp
 - Measures Kalman filtered RSSI and turn it into the distance, and performs Particle filtering for getting the coordinates (Final Application)
+- RSSIMeasureApp\app\release\app-release.apk : Final application install file.
 
 StepDetectionLSTMapp
 - Performs PDR with ML model from 'LSTMstepdetect', and step detection is controlled by the ML model from 'LSTMmotionClassify' (Final Application)
+- StepDetectionLSTMapp\app\release\app-release.apk : Final application install file.
